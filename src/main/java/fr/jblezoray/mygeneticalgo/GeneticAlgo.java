@@ -17,8 +17,7 @@ public class GeneticAlgo {
   private final int populationSize;
   private final int numberOfBases;
   private final int dnaLength;
-  private final IEvolver evolver;
-  private final IResultListener resultListener;
+  private final IPhenotype phenotype;
   
   private int generationCounter = 0;
   private int tournamentSize;
@@ -42,16 +41,15 @@ public class GeneticAlgo {
    * @param populationSize
    * @param dnaLength
    * @param numberOfBases
-   * @param evolver
    * @param resultListener
    */
   public GeneticAlgo(int populationSize, int dnaLength, int numberOfBases, 
-      IEvolver evolver, IResultListener resultListener) {
+      IPhenotype phenotype) {
     this.populationSize = populationSize;
     this.numberOfBases = numberOfBases;
     this.dnaLength = dnaLength;
-    this.evolver = evolver;
-    this.resultListener = resultListener;
+    
+    this.phenotype = phenotype;
     
     this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
     this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
@@ -128,16 +126,14 @@ public class GeneticAlgo {
     
     // compute fitness
     this.population.forEach(dna -> {
-      double fitness = this.evolver.computeFitness(dna);
+      double fitness = this.phenotype.computeFitness(dna);
       dna.setFitness(fitness);
     });
     
     // notify of best result for this generation
     this.population.sort(BETTER_FITNESS_FIRST);
     DNA bestOne = this.population.get(0);
-    if (resultListener!=null) {
-      resultListener.notificationOfBestMatch(generationCounter, bestOne.getFitness(), bestOne);
-    }
+    phenotype.notificationOfBestMatch(generationCounter, bestOne);
     
     // create a new population.
     List<DNA> newPopulation = new ArrayList<>(this.populationSize);
