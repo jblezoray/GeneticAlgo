@@ -6,15 +6,28 @@ import java.util.Random;
 public final class DNA extends ArrayList<Integer> {
   
   private static final long serialVersionUID = -834318714758648801L;
+
+  /**
+   * Fitness when not evaluated. 
+   * Valid range is [0,1[, with zero being the worst and one the better. 
+   * Therefore -1.0 is not a valid value. 
+   */
+  private static final double NOT_EVALUATED = -1.0;
+
+  private double fitness = NOT_EVALUATED;
   
-  DNA(int dnaSize) {
+  public DNA(int dnaSize) {
     super(dnaSize);
   }
 
+  /**
+   * Copy constructor.
+   * @param dna
+   */
   public DNA(DNA dna) {
     super(dna);
   }
-
+  
   /**
    * Creates a random string of DNA.
    * @param rand
@@ -33,4 +46,13 @@ public final class DNA extends ArrayList<Integer> {
     }
     return dna;
   }
+
+  public void setFitness(double fitness) {
+    this.fitness = fitness;
+  }
+  
+  public double getFitness() {
+    return this.fitness;
+  }
+  
 }

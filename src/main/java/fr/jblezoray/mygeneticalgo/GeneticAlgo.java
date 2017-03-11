@@ -8,60 +8,88 @@ import java.util.Random;
 public class GeneticAlgo {
 
   private static final Random RANDOM = new Random();
+
+  private static final double DEFAULT_TOURNAMENT_FRACTION = 0.6f;
+  private static final float DEFAULT_MUTATION_RATE = 0.0001f;
+  private static final int DEFAULT_MIN_CROSSOVER = 1;
+  private static final int DEFAULT_MAX_CROSSOVER = 3;
   
-  /** Value in [2, inf[ */
-  private final int populationSize = 100;
+  private final int populationSize;
   private final int numberOfBases;
   private final int dnaLength;
+  private final IEvolver evolver;
+  private final IResultListener resultListener;
   
   private int generationCounter = 0;
-  /**
-   * Part of the population that gets involved in each tournament when finding
-   * mates.  
-   * Value in [2, populationSize].
-   */
   private int tournamentSize;
-  private List<Individual> population;
+  private List<DNA> population;
   
-  
-  private final double tournamentFraction = 0.6f;
-  private final IEvolver evolver;
-  private final int minCrossovers = 0;
-  private final int maxCrossovers = 3;
-  private float mutationRate = 0.0001f;
-  private IResultListener resultListener = null;
+  private int minCrossovers;
+  private int maxCrossovers;
+  private float mutationRate;
 
-  private final static Comparator<Individual> BETTER_FITNESS_FIRST = 
-      new Comparator<Individual>() {
+  private final static Comparator<DNA> BETTER_FITNESS_FIRST = 
+      new Comparator<DNA>() {
         @Override
-        public int compare(Individual i1, Individual i2) {
+        public int compare(DNA i1, DNA i2) {
           return (i1==null || i2 == null) ? 0
               : - Double.compare(i1.getFitness(), i2.getFitness());
         }
       };
   
-  
   /**
    * Create a new Genetic algorithm with an initial population.
+   * @param populationSize
    * @param dnaLength
    * @param numberOfBases
    * @param evolver
+   * @param resultListener
    */
-  public GeneticAlgo(int dnaLength, int numberOfBases,
-      IEvolver evolver) {
+  public GeneticAlgo(int populationSize, int dnaLength, int numberOfBases, 
+      IEvolver evolver, IResultListener resultListener) {
+    this.populationSize = populationSize;
     this.numberOfBases = numberOfBases;
     this.dnaLength = dnaLength;
     this.evolver = evolver;
-    this.tournamentSize = (int) Math.ceil(populationSize*tournamentFraction);
-    this.generationCounter = 0;
-    if (this.tournamentSize<=1) this.tournamentSize=2;
+    this.resultListener = resultListener;
+    
+    this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
+    this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
+    this.setMutationRate(DEFAULT_MUTATION_RATE);
+    
     populatePopulation();
   }
   
-  public void setListener(IResultListener resultListener) {
-    this.resultListener = resultListener;
-  }
   
+  /**
+   * 
+   * @param tournamentFraction
+   */
+  public void setTournamentFraction(double tournamentFraction) {
+    this.tournamentSize = (int) Math.ceil(populationSize*tournamentFraction);
+    if (this.tournamentSize<=1) {
+      this.tournamentSize=2;
+    }
+  }
+
+  /**
+   * 
+   * @param minCrossovers
+   * @param maxCrossovers
+   */
+  public void setCrossoversRange(int minCrossovers, int maxCrossovers) {
+    this.minCrossovers = minCrossovers;
+    this.maxCrossovers = maxCrossovers;
+  }
+
+  /**
+   * 
+   * @param mutationRate
+   */
+  public void setMutationRate(float mutationRate) {
+    this.mutationRate = mutationRate;
+  }
+
   
   /**
    * Creates a random new population. 
@@ -73,8 +101,7 @@ public class GeneticAlgo {
     this.population = new ArrayList<>(this.populationSize);
     for (int i=0; i<this.populationSize; i++) {
       DNA dna = DNA.create(RANDOM, this.dnaLength, this.numberOfBases);
-      Individual individual = new Individual(dna);
-      this.population.add(individual);
+      this.population.add(dna);
     }
   }
   
@@ -85,42 +112,48 @@ public class GeneticAlgo {
    *    The population will evolve for this much generations. 
    */
   public void evolve(int howManyGenerations) {
-    for (int i=0; i<howManyGenerations; i++)
-      evolve();
+    boolean hasBestEvaluationResult = false; 
+    for (int i=0; i<howManyGenerations && !hasBestEvaluationResult; i++)
+      hasBestEvaluationResult = evolve();
   }
+  
   
   /**
    * Evolve the population for one generation.
+   * 
+   * @return
    */
-  public void evolve() {
+  public boolean evolve() {
     this.generationCounter++;
     
     // compute fitness
-    this.population.forEach(individual -> {
-      double fitness = this.evolver.computeFitness(individual);
-      individual.setFitness(fitness);
+    this.population.forEach(dna -> {
+      double fitness = this.evolver.computeFitness(dna);
+      dna.setFitness(fitness);
     });
     
     // notify of best result for this generation
+    this.population.sort(BETTER_FITNESS_FIRST);
+    DNA bestOne = this.population.get(0);
     if (resultListener!=null) {
-      this.population.sort(BETTER_FITNESS_FIRST);
-      Individual bestOne = this.population.get(0);
-      resultListener.notificationOfBestMatch(generationCounter, bestOne.getFitness(), bestOne.getDNA());
+      resultListener.notificationOfBestMatch(generationCounter, bestOne.getFitness(), bestOne);
     }
     
     // create a new population.
-    List<Individual> newPopulation = new ArrayList<>(this.populationSize);
+    List<DNA> newPopulation = new ArrayList<>(this.populationSize);
     for (int i=0; i<this.populationSize; i+=2) {
       MatingPair parentsPair = tournamentSelection();
       MatingPair childPair = doDnaCrossover(parentsPair);
-      doMutate(childPair.getMate1().getDNA());
-      doMutate(childPair.getMate2().getDNA());
-      newPopulation.add(new Individual(childPair.getMate1().getDNA()));
-      newPopulation.add(new Individual(childPair.getMate2().getDNA()));
+      doMutate(childPair.getMate1());
+      doMutate(childPair.getMate2());
+      newPopulation.add(new DNA(childPair.getMate1()));
+      newPopulation.add(new DNA(childPair.getMate2()));
     }
     this.population = newPopulation;
+    return false;
   }
 
+  
   /**
    * Selects two individuals to mate using tournament selection.
    * 
@@ -135,11 +168,11 @@ public class GeneticAlgo {
    */
   private MatingPair tournamentSelection() {
     // Choose 'tournamentSize' elements randomly from the population.
-    List<Individual> chosenOnes = new ArrayList<>(this.tournamentSize);
-    List<Individual> populationCopy = new ArrayList<>(this.population);
+    List<DNA> chosenOnes = new ArrayList<>(this.tournamentSize);
+    List<DNA> populationCopy = new ArrayList<>(this.population);
     for (int i=0; i<this.tournamentSize; i++) {
       int randomIndex = RANDOM.nextInt(populationCopy.size());
-      Individual chosenOne = populationCopy.get(randomIndex);
+      DNA chosenOne = populationCopy.get(randomIndex);
       populationCopy.remove(chosenOne);
       chosenOnes.add(chosenOne);
     }
@@ -152,6 +185,7 @@ public class GeneticAlgo {
     matingPair.setMate2(chosenOnes.get(1)); 
     return matingPair;
   }
+  
 
   /**
    * Crossover the mating pair's DNA so many times according to crossover rate.
@@ -164,8 +198,8 @@ public class GeneticAlgo {
   private MatingPair doDnaCrossover(MatingPair pair) {
 
     // work on copies to not alter originals.
-    DNA child1DNA = new DNA(pair.getMate1().getDNA());
-    DNA child2DNA = new DNA(pair.getMate2().getDNA());
+    DNA child1DNA = new DNA(pair.getMate1());
+    DNA child2DNA = new DNA(pair.getMate2());
     
     int nbCrossovers = RANDOM.nextInt(this.maxCrossovers - this.minCrossovers) + this.minCrossovers;
     for (int i=0; i<nbCrossovers; i++) {
@@ -178,8 +212,8 @@ public class GeneticAlgo {
     }
     
     MatingPair childs = new MatingPair();
-    childs.setMate1(new Individual(child1DNA));
-    childs.setMate2(new Individual(child2DNA));
+    childs.setMate1(new DNA(child1DNA));
+    childs.setMate2(new DNA(child2DNA));
     return childs;
   }
 
