@@ -65,9 +65,6 @@ public class GeneticAlgo {
    */
   public void setTournamentFraction(double tournamentFraction) {
     this.tournamentSize = (int) Math.ceil(populationSize*tournamentFraction);
-    if (this.tournamentSize<=1) {
-      this.tournamentSize=2;
-    }
   }
 
   /**
@@ -137,7 +134,9 @@ public class GeneticAlgo {
     
     // create a new population.
     List<DNA> newPopulation = new ArrayList<>(this.populationSize);
-    for (int i=0; i<this.populationSize; i+=2) {
+    int i=0;
+    while (i+2<=this.populationSize) {
+      i+=2;
       MatingPair parentsPair = tournamentSelection();
       MatingPair childPair = doDnaCrossover(parentsPair);
       doMutate(childPair.getMate1());

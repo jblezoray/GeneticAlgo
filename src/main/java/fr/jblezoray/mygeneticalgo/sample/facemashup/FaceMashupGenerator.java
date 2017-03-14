@@ -1,34 +1,46 @@
 package fr.jblezoray.mygeneticalgo.sample.facemashup;
 
+import java.io.File;
+import java.io.IOException;
+
 import fr.jblezoray.mygeneticalgo.DNA;
-import fr.jblezoray.mygeneticalgo.GeneticAlgo;
 import fr.jblezoray.mygeneticalgo.IPhenotype;
 
 /**
  *
  */
 public class FaceMashupGenerator implements IPhenotype {
-  private static final int POP_SIZE = 30;
-  private static final int DNA_LENGTH = 250;
-  private static final int NB_OF_BASES = 100;
 
-  public static void main(String[] args){
-    FaceMashupGenerator fma = new FaceMashupGenerator();
-    GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
-    ga.evolve(10000);
+  private final FaceImage faceMatch;
+  private final FaceImage faceMask;
+  private final File statusDir;
+  private final FaceImageFactory faceImageFactory;
+  
+  public FaceMashupGenerator(int numberOfBases, File faceMatch, File faceMask, File statusDir) 
+      throws IOException{
+    this.faceMatch = new FaceImage(faceMatch);
+    this.faceMask = new FaceImage(faceMask);
+    this.statusDir = statusDir;
+    this.faceImageFactory = new FaceImageFactory(this.faceMask, numberOfBases);
   }
   
   @Override
   public void notificationOfBestMatch(int generation, DNA dna) {
-    // TODO
+    if (generation % 100 == 0) {
+      FaceImage bestMatch = this.faceImageFactory.fromDNA(dna);
+      String filename = String.format("generation_%07d.png", generation);
+      try {
+        bestMatch.writeToFile(new File(statusDir, filename));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   @Override
   public double computeFitness(DNA dna) {
-//    BufferedImage phenotype = phenotypeObject.createPhenotype(DNA);
-//    double similarity = calculateImageSimilarity(phenotype, source);
-//    return ((similarity - similarityMin) / (similarityMax - similarityMin))*100;
-    return 0.0;
+    FaceImage constructed = this.faceImageFactory.fromDNA(dna);
+    return faceMatch.computeFitnessOf(constructed);
   }
 
 }
