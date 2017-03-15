@@ -7,7 +7,8 @@ import fr.jblezoray.mygeneticalgo.DNA;
 import fr.jblezoray.mygeneticalgo.IPhenotype;
 
 /**
- *
+ * A genetic algo that generates a Face by combinating Face images. 
+ * @author jib
  */
 public class FaceMashupGenerator implements IPhenotype {
 
@@ -26,13 +27,13 @@ public class FaceMashupGenerator implements IPhenotype {
   
   @Override
   public void notificationOfBestMatch(int generation, DNA dna) {
-    if (generation % 100 == 0) {
+    if (generation == 1 || generation % 100 == 0) {
       FaceImage bestMatch = this.faceImageFactory.fromDNA(dna);
       String filename = String.format("generation_%07d.png", generation);
       try {
         bestMatch.writeToFile(new File(statusDir, filename));
       } catch (IOException e) {
-        e.printStackTrace();
+        e.printStackTrace(); // TODO better error handling
       }
     }
   }
