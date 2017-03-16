@@ -122,7 +122,7 @@ public class GeneticAlgo {
     this.generationCounter++;
     
     // compute fitness
-    this.population.forEach(dna -> {
+    this.population.parallelStream().forEach(dna -> {
       double fitness = this.phenotype.computeFitness(dna);
       dna.setFitness(fitness);
     });
