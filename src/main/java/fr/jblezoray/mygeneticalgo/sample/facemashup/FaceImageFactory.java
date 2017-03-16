@@ -73,7 +73,7 @@ public class FaceImageFactory {
     Graphics2D graphics2D = null;
     try {
       graphics2D = image.createGraphics();
-      graphics2D.setBackground(Color.LIGHT_GRAY);
+      graphics2D.setBackground(Color.WHITE);
       graphics2D.clearRect(0, 0, w, h);
       
       // read five genes to generate an image.
