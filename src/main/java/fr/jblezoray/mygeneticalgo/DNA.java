@@ -38,7 +38,7 @@ public final class DNA extends ArrayList<Integer> {
    * @return 
    *    a DNA fragment. 
    */
-  static DNA create(Random rand, int dnaLength, int numberOfBases) {
+  public static DNA create(Random rand, int dnaLength, int numberOfBases) {
     DNA dna = new DNA(dnaLength);
     for(int i=0; i<dnaLength; i++){
       int base = rand.nextInt(numberOfBases);

@@ -1,35 +1,24 @@
 package fr.jblezoray.mygeneticalgo.sample.helloworld;
 
 import fr.jblezoray.mygeneticalgo.DNA;
-import fr.jblezoray.mygeneticalgo.GeneticAlgo;
 import fr.jblezoray.mygeneticalgo.IPhenotype;
 
 public class HelloWorldGenerator implements IPhenotype {
 
-  private static final String EXPECTED_RESULT = 
-      "Hello world ! Le Lorem Ipsum est simplement du faux texte employé dans"
-      + " la composition et la mise en page avant impression."; 
+  private final String expectedResult;
+  private final char[] bases;
   
-  private static final char[] BASES = 
-      "abcdefghijklmnopqrstuvwxyz !.éHLI".toCharArray();
-  
-  public static void main(String[] args) {
-    HelloWorldGenerator hwg = new HelloWorldGenerator();
-    GeneticAlgo ga = new GeneticAlgo(100, EXPECTED_RESULT.length(), 
-        BASES.length, hwg);
-    
-    // Reducing the mutation rate after some time enables a faster convergence. 
-    ga.evolve(300);
-    ga.setMutationRate(0.000001f);
-    ga.evolve(300);
+  public HelloWorldGenerator(String expectedResult, char[] bases) {
+    this.expectedResult = expectedResult;
+    this.bases = bases;
   }
 
   @Override
   public double computeFitness(DNA dna) {
     int globalDistance = 0;
     for (int i=0; i<dna.size(); i++) {
-      char expectedBase = EXPECTED_RESULT.charAt(i);
-      char effectiveBase = BASES[dna.get(i)];
+      char expectedBase = expectedResult.charAt(i);
+      char effectiveBase = bases[dna.get(i)];
       int distance = Math.abs(expectedBase - effectiveBase); 
       globalDistance += distance;
     }
@@ -44,10 +33,10 @@ public class HelloWorldGenerator implements IPhenotype {
     }
   }
   
-  private static String buildStringFromDNA(DNA dna) {
+  private String buildStringFromDNA(DNA dna) {
     StringBuilder sb = new StringBuilder();
     for (Integer c : dna) {
-      sb.append(BASES[c]);
+      sb.append(this.bases[c]);
     }
     return sb.toString();
   }
