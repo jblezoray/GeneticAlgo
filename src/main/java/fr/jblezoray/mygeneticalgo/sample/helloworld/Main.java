@@ -17,6 +17,7 @@ public class Main {
         BASES.length, hwg);
     
     // Reducing the mutation rate after some time enables a faster convergence. 
+    ga.setMutationRate(0.0001f);
     ga.evolve(300);
     ga.setMutationRate(0.000001f);
     ga.evolve(300);

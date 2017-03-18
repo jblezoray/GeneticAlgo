@@ -9,8 +9,8 @@ public class GeneticAlgo {
 
   private static final Random RANDOM = new Random();
 
-  private static final double DEFAULT_TOURNAMENT_FRACTION = 0.6f;
-  private static final float DEFAULT_MUTATION_RATE = 0.0001f;
+  private static final double DEFAULT_TOURNAMENT_FRACTION = 0.4f;
+  private static final float DEFAULT_MUTATION_RATE = 0.05f;
   private static final int DEFAULT_MIN_CROSSOVER = 1;
   private static final int DEFAULT_MAX_CROSSOVER = 3;
   
@@ -155,7 +155,7 @@ public class GeneticAlgo {
    * This type of selection grabs the best two from a random subset of the 
    * population.
    * 
-   * TODO this method could be externalized and abstracted to allow using other
+   * TODO this method could be externalize and abstracted to allow using other
    * types of selections. 
    * 
    * @see https://en.wikipedia.org/wiki/Tournament_selection
@@ -177,7 +177,8 @@ public class GeneticAlgo {
     chosenOnes.sort(BETTER_FITNESS_FIRST);
     MatingPair matingPair = new MatingPair(); 
     matingPair.setMate1(chosenOnes.get(0));
-    matingPair.setMate2(chosenOnes.get(1)); 
+    matingPair.setMate2(chosenOnes.get(1));
+    
     return matingPair;
   }
   
@@ -192,23 +193,25 @@ public class GeneticAlgo {
    */
   private MatingPair doDnaCrossover(MatingPair pair) {
 
-    // work on copies to not alter originals.
-    DNA child1DNA = new DNA(pair.getMate1());
-    DNA child2DNA = new DNA(pair.getMate2());
+    int nbCrossovers = RANDOM.nextInt(this.maxCrossovers - this.minCrossovers)
+        + this.minCrossovers;
     
-    int nbCrossovers = RANDOM.nextInt(this.maxCrossovers - this.minCrossovers) + this.minCrossovers;
+    // work on copies to not alter originals.
+    boolean takeChild1atFirst = RANDOM.nextBoolean();
+    DNA dnaA = new DNA( takeChild1atFirst ? pair.getMate1() : pair.getMate2());
+    DNA dnaB = new DNA( takeChild1atFirst ? pair.getMate2() : pair.getMate1());
     for (int i=0; i<nbCrossovers; i++) {
       int pivot = RANDOM.nextInt(this.dnaLength);
       for (int j=pivot; j<this.dnaLength; j++) {
-        int element = child1DNA.get(j);
-        child1DNA.set(j, child2DNA.get(j));
-        child2DNA.set(j, element);
+        int element = dnaA.get(j);
+        dnaA.set(j, dnaB.get(j));
+        dnaB.set(j, element);
       }
     }
     
     MatingPair childs = new MatingPair();
-    childs.setMate1(new DNA(child1DNA));
-    childs.setMate2(new DNA(child2DNA));
+    childs.setMate1(new DNA(dnaA));
+    childs.setMate2(new DNA(dnaB));
     return childs;
   }
 
