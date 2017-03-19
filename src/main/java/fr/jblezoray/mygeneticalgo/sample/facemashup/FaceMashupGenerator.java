@@ -28,7 +28,8 @@ public class FaceMashupGenerator implements IPhenotype {
   @Override
   public void notificationOfBestMatch(int generation, DNA dna) {
     if (generation == 1 || generation % 20 == 0) {
-      System.out.printf("generation %7d : fitness %f : dna : %s\n", generation, dna.getFitness(), dna.toString());
+      System.out.printf("generation %7d : fitness %f : dna : %s\n", 
+          generation, dna.getFitness(), dna.toString());
       FaceImage bestMatch = this.faceImageFactory.fromDNA(dna);
       String filename = String.format("generation_%07d.png", generation);
       try {
