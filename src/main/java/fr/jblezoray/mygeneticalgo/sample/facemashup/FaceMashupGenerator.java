@@ -12,14 +12,14 @@ import fr.jblezoray.mygeneticalgo.IPhenotype;
  */
 public class FaceMashupGenerator implements IPhenotype {
 
-  private final FaceImage faceMatch;
+  private final IFitness faceMatchFitness;
   private final FaceImage faceMask;
   private final File statusDir;
   private final FaceImageFactory faceImageFactory;
   
   public FaceMashupGenerator(int numberOfBases, File faceMatch, File faceMask, File statusDir) 
       throws IOException{
-    this.faceMatch = new FaceImage(faceMatch);
+    this.faceMatchFitness = FitnessRMS.build(new FaceImage(faceMatch));
     this.faceMask = new FaceImage(faceMask);
     this.statusDir = statusDir;
     this.faceImageFactory = new FaceImageFactory(this.faceMask, numberOfBases);
@@ -43,7 +43,7 @@ public class FaceMashupGenerator implements IPhenotype {
   @Override
   public double computeFitness(DNA dna) {
     FaceImage constructed = this.faceImageFactory.fromDNA(dna);
-    return faceMatch.computeFitnessOf(constructed);
+    return faceMatchFitness.computeFitnessOf(constructed);
   }
 
 }

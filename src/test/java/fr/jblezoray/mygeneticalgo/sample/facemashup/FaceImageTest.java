@@ -27,11 +27,12 @@ public class FaceImageTest {
         this.getClass().getResourceAsStream("/generation_0002000.png")));
     
     // when 
-    double fitness0001 = matchImage.computeFitnessOf(gen0001);
-    double fitness0100 = matchImage.computeFitnessOf(gen0100);
-    double fitness0500 = matchImage.computeFitnessOf(gen0500);
-    double fitness1000 = matchImage.computeFitnessOf(gen1000);
-    double fitness2000 = matchImage.computeFitnessOf(gen2000);
+    IFitness frms = FitnessRMS.build(matchImage);
+    double fitness0001 = frms.computeFitnessOf(gen0001);
+    double fitness0100 = frms.computeFitnessOf(gen0100);
+    double fitness0500 = frms.computeFitnessOf(gen0500);
+    double fitness1000 = frms.computeFitnessOf(gen1000);
+    double fitness2000 = frms.computeFitnessOf(gen2000);
     
     // then
     assertTrue(fitness0001 < fitness0100);
