@@ -9,8 +9,8 @@ public class GeneticAlgo {
 
   private static final Random RANDOM = new Random();
 
-  private static final double DEFAULT_TOURNAMENT_FRACTION = 0.4f;
-  private static final float DEFAULT_MUTATION_RATE = 0.05f;
+  private static final double DEFAULT_TOURNAMENT_FRACTION = 0.6f;
+  private static final float DEFAULT_MUTATION_RATE = 0.001f;
   private static final int DEFAULT_MIN_CROSSOVER = 1;
   private static final int DEFAULT_MAX_CROSSOVER = 3;
   

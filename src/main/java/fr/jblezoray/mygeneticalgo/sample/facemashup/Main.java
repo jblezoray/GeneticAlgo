@@ -25,6 +25,8 @@ public class Main {
     
     FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, fileMask, dirStatus);
     GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
+    ga.setMutationRate(0.01f);
+    ga.setTournamentFraction(0.6f);
     ga.evolve(1000);
   }
 
@@ -37,7 +39,6 @@ public class Main {
     System.out.println("   maskImage  : same as the goal image, but with some transmarency to create a mask.");
     System.out.println("   statusDir  : directory where to store some intermediate results.");
     System.out.println("");
-    
   }
 
 }

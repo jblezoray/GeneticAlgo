@@ -59,7 +59,7 @@ public final class DNA extends ArrayList<Integer> {
     StringBuilder sb = new StringBuilder();
     for (int i=0; i<this.size(); i++) {
       int nb = this.get(i);
-      if (nb <= Character.MAX_RADIX) 
+      if (nb < Character.MAX_RADIX) 
         sb.append('0');
       if (nb == 0) 
         sb.append('0');
