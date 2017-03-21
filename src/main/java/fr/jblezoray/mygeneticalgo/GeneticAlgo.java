@@ -78,7 +78,11 @@ public class GeneticAlgo {
   }
 
   /**
+   * Adjust the mutation rate.
    * 
+   * The mutation rate is the probability of an injecting a mutation 
+   * 
+   * Higher mutation rate enables a faster convergence, but less precision.
    * @param mutationRate
    */
   public void setMutationRate(float mutationRate) {
@@ -221,6 +225,9 @@ public class GeneticAlgo {
    * @param dna
    */
   private void doMutate(DNA dna) {
+    
+    // TODO this method should not be deterministic in terms of number of mutation.  
+    
     int nbMutations = (int)Math.ceil(this.dnaLength * this.mutationRate);
     for (int i=0; i<nbMutations; i++) {
       int mutationIndex = RANDOM.nextInt(this.dnaLength);

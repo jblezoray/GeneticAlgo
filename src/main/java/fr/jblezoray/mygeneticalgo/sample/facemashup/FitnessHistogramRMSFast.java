@@ -58,13 +58,14 @@ public class FitnessHistogramRMSFast implements IFitness {
     int[] rgbHistogram = new int[256*3];
     for (int pixel=0; pixel<pixelsThis.length; pixel+=3) {
       
-      byte thisB = pixelsThis[pixel];
-      byte thisG = pixelsThis[pixel+1];
-      byte thisR = pixelsThis[pixel+2];
+      // the bitmask normalize the value in [0, 255], hence the int.
+      int thisB = pixelsThis[pixel]   & 0xFF;
+      int thisG = pixelsThis[pixel+1] & 0xFF;
+      int thisR = pixelsThis[pixel+2] & 0xFF;
   
-      byte otherB = pixelsOther[pixel];
-      byte otherG = pixelsOther[pixel+1];
-      byte otherR = pixelsOther[pixel+2];
+      int otherB = pixelsOther[pixel]   & 0xFF;
+      int otherG = pixelsOther[pixel+1] & 0xFF;
+      int otherR = pixelsOther[pixel+2] & 0xFF;
   
       int diffB = Math.abs(thisB - otherB);
       int diffG = Math.abs(thisG - otherG);

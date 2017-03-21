@@ -28,6 +28,10 @@ public class Main {
     ga.setTournamentFraction(0.6f);
     ga.setMutationRate(0.0001f);
     ga.evolve(1000);
+    ga.setMutationRate(0.001f);
+    ga.evolve(1000);
+    ga.setMutationRate(0.01f);
+    ga.evolve(1000);
   }
 
   private static void printUsage() {
