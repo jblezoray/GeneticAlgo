@@ -7,43 +7,36 @@ import java.util.Arrays;
  * Uses RMS (Root Mean Square) analysis to computes the fitness of an Image 
  * relatively the image it was constructed with.
  * 
+ * Uses root mean squared analysis.
+ * See https://en.wikipedia.org/wiki/Root_mean_square
+ * 
  * @author jib
  *
  */
-public class FitnessRMS implements IFitness {
+public class FitnessHistogramRMS implements IFitness {
   
   private BufferedImage image;
   
-  private FitnessRMS(FaceImage original){
+  private FitnessHistogramRMS(FaceImage original){
     this.image = original.getImage();
     if (this.image.getType() != BufferedImage.TYPE_INT_ARGB)
       throw new RuntimeException("invalid image type : " + this.image.getType());
   }
   
   public static IFitness build(FaceImage reference) {
-    return new FitnessRMS(reference);
+    return new FitnessHistogramRMS(reference);
   }
 
   @Override
   public double computeFitnessOf(FaceImage candidateToEvaluate) {
-    return simpleImageSimilarity(candidateToEvaluate.getImage());
-  }
-  
-  /**
-   * Calculates the difference between two images.
-   * 
-   * Uses root mean squared analysis.
-   * See https://en.wikipedia.org/wiki/Root_mean_square
-   * 
-   * @param candidateToEvaluate
-   * @return
-   */
-  private double simpleImageSimilarity(BufferedImage candidateToEvaluate) {
     if (this.image.getType() != BufferedImage.TYPE_INT_ARGB)
       throw new RuntimeException("invalid image type : " + this.image.getType());
+    
     final int dimension = this.image.getWidth() * this.image.getHeight();
-    BufferedImage difference = imageAbsoluteDifference(this.image, candidateToEvaluate);
+    BufferedImage difference = imageAbsoluteDifference(this.image, candidateToEvaluate.getImage());
+    
     int[] histogram = imageHistogram(difference);
+    
     double sumSquaredValues = 0;
     for(int n = 0; n < histogram.length; n++) 
       sumSquaredValues += n * n * histogram[n];

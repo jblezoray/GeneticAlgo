@@ -69,7 +69,7 @@ public class FaceImageFactory {
    */
   public FaceImage fromDNA(DNA dna) {
     // create a new blank image. 
-    BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+    BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
     Graphics2D graphics2D = null;
     try {
       graphics2D = image.createGraphics();
@@ -91,7 +91,7 @@ public class FaceImageFactory {
       if (graphics2D!=null)
         graphics2D.dispose();
     }
-    return new FaceImage(image);
+    return new FaceImage(image, false);
   }
   
 

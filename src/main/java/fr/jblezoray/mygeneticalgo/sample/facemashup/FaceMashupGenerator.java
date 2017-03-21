@@ -19,8 +19,8 @@ public class FaceMashupGenerator implements IPhenotype {
   
   public FaceMashupGenerator(int numberOfBases, File faceMatch, File faceMask, File statusDir) 
       throws IOException{
-    this.faceMatchFitness = FitnessRMS.build(new FaceImage(faceMatch));
-    this.faceMask = new FaceImage(faceMask);
+    this.faceMatchFitness = FitnessHistogramRMSFast.build(new FaceImage(faceMatch, false));
+    this.faceMask = new FaceImage(faceMask, true);
     this.statusDir = statusDir;
     this.faceImageFactory = new FaceImageFactory(this.faceMask, numberOfBases);
   }

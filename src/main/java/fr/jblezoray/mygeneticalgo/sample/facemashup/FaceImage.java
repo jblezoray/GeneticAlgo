@@ -15,16 +15,25 @@ public class FaceImage {
 
   private final BufferedImage image;
 
-  public FaceImage(File f) throws IOException {
-    this(ImageIO.read(f));
+  public FaceImage(File f, boolean hasAlpha) throws IOException {
+    this(ImageIO.read(f), hasAlpha);
   }
+
   
-  public FaceImage(BufferedImage source) {
-    BufferedImage sourceABGR = new BufferedImage(source.getWidth(), source.getHeight(), 
-        BufferedImage.TYPE_INT_ARGB);
-    sourceABGR.getGraphics().drawImage(source, 0, 0, null);
-    sourceABGR.getGraphics().dispose();
-    this.image = sourceABGR;
+  public FaceImage(BufferedImage source, boolean hasAlpha) {
+    
+    int type = hasAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
+    
+    if (source.getType() == type) {
+      this.image = source;
+    } else {
+      int srcW = source.getWidth();
+      int srcH = source.getHeight();
+      BufferedImage sourceConverted = new BufferedImage(srcW, srcH, type);
+      sourceConverted.getGraphics().drawImage(source, 0, 0, null);
+      sourceConverted.getGraphics().dispose();
+      this.image = sourceConverted;
+    }
   }
   
   public BufferedImage getImage() {
@@ -34,6 +43,5 @@ public class FaceImage {
   public void writeToFile(File dest) throws IOException {
     ImageIO.write(image, "png", dest);
   }
-
 
 }
