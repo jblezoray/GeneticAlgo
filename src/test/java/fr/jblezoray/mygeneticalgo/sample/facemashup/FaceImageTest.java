@@ -29,6 +29,15 @@ public class FaceImageTest {
     computeFitnessWith(fpb);
   }
   
+  
+  @Test
+  public void testComputeFitnessOf_FitnessPatchNoHistogram() throws IOException {
+    FaceImage matchImage = new FaceImage(ImageIO.read(
+        this.getClass().getResourceAsStream("/match.png")), false);
+    IFitness fpb = FitnessPatchNoHistogram.build(matchImage, 10);
+    computeFitnessWith(fpb);
+  }
+  
   private static void computeFitnessWith(IFitness frms) throws IOException {
     // having
     FaceImage gen0001 = new FaceImage(ImageIO.read(
