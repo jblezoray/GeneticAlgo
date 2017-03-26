@@ -7,8 +7,8 @@ import fr.jblezoray.mygeneticalgo.GeneticAlgo;
 
 public class Main {
 
-  private static final int POP_SIZE = 50;
-  private static final int DNA_LENGTH = 5 * 100;
+  private static final int POP_SIZE = 100;
+  private static final int DNA_LENGTH = 5 * 150;
   private static final int NB_OF_BASES = 1000;
   
   
@@ -24,14 +24,12 @@ public class Main {
     File dirStatus = new File(args[2]);
     
     FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, fileMask, dirStatus);
-    GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
-    ga.setTournamentFraction(0.6f);
-    ga.setMutationRate(0.0001f);
-    ga.evolve(1000);
-    ga.setMutationRate(0.001f);
-    ga.evolve(1000);
-    ga.setMutationRate(0.01f);
-    ga.evolve(1000);
+
+    for (int i=0 ;; i+=2000) {
+      GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
+      ga.setCurrentGenerationNumber(i);
+      ga.evolve(10000);
+    }
   }
 
   private static void printUsage() {

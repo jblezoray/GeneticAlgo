@@ -36,6 +36,24 @@ public class FaceImage {
     }
   }
   
+  
+  public FaceImage(byte[] bgr, int width, int height) {
+    BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        int index = 3*(y*width + x);
+        int rgb = 
+            ((bgr[index+2] & 0xFF) << 16) |
+            ((bgr[index+1] & 0xFF) << 8) |
+            (bgr[index] & 0xFF) |
+            0;
+        img.setRGB(x, y, rgb);
+      }
+    }
+    this.image = img;
+  }
+
+
   public BufferedImage getImage() {
     return this.image;
   }
