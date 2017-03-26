@@ -4,24 +4,23 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
 /**
- * Uses RMS (Root Mean Square) analysis to computes the fitness of an Image 
- * relatively the image it was constructed with.
+ * Uses a RMS (Root Mean Square) analysis of the histogram of the image, to 
+ * computes its fitness relatively the image it was constructed with.
+ * 
+ * The histogram contains a value to value comparison.
  * 
  * @author jib
  *
  */
-public class FitnessHistogramRMSFast implements IFitness {
+public class FitnessHistogramRMS implements IFitness {
   
   private BufferedImage image;
   
-  private FitnessHistogramRMSFast(FaceImage original){
-    this.image = original.getImage();
+  @Override
+  public void init(FaceImage reference) {
+    this.image = reference.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
-  }
-  
-  public static IFitness build(FaceImage reference) {
-    return new FitnessHistogramRMSFast(reference);
   }
 
   @Override
@@ -53,8 +52,6 @@ public class FitnessHistogramRMSFast implements IFitness {
     byte[] pixelsThis = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
     byte[] pixelsOther = ((DataBufferByte) other.getRaster().getDataBuffer()).getData();
   
-    // TODO assert that pixelsThis and pixelsOther are the same size.
-    
     int[] rgbHistogram = new int[256*3];
     for (int pixel=0; pixel<pixelsThis.length; pixel+=3) {
       

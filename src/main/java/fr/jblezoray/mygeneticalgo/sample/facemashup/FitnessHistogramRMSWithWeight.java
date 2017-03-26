@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 /**
+ * Uses a RMS (Root Mean Square) analysis of the histogram of the image to 
+ * compute its fitness relatively the image it was constructed with.
  * 
  * @author jib
  *
@@ -17,16 +19,12 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
   
   private BufferedImage image;
   private float[] weigth = null;
-  
-  
-  private FitnessHistogramRMSWithWeight(FaceImage original){
+
+  @Override
+  public void init(FaceImage original){
     this.image = original.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
-  }
-  
-  public static IFitness build(FaceImage reference) {
-    return new FitnessHistogramRMSWithWeight(reference);
   }
 
   @Override
@@ -56,12 +54,8 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
     synchronized (this) {
       if (this.weigth==null) initWeight(PATCH_SIZE); 
     }
-    // Grab raw data. Don't use getRGB(), it's performance is crappy (See 
-    // http://stackoverflow.com/a/9470843/2082935)
     byte[] pixelsThis = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
     byte[] pixelsOther = ((DataBufferByte) other.getRaster().getDataBuffer()).getData();
-    
-    // TODO assert that pixelsThis and pixelsOther are the same size.
     
     int[] rgbHistogram = new int[256*3];
     for (int pixel=0; pixel<pixelsThis.length; pixel+=3) {
@@ -70,7 +64,6 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
       float weightG = this.weigth[pixel+1];
       float weightR = this.weigth[pixel+2];
       
-      // the bitmask normalize the value in [0, 255], hence the int.
       int thisB = pixelsThis[pixel]   & 0xFF;
       int thisG = pixelsThis[pixel+1] & 0xFF;
       int thisR = pixelsThis[pixel+2] & 0xFF;
@@ -82,17 +75,10 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
       int diffB = (int) (weightB * Math.abs(thisB - otherB));
       int diffG = (int) (weightG * Math.abs(thisG - otherG));
       int diffR = (int) (weightR * Math.abs(thisR - otherR));
-//      int diffB = (int) (Math.abs(thisB - otherB));
-//      int diffG = (int) (Math.abs(thisG - otherG));
-//      int diffR = (int) (Math.abs(thisR - otherR));
       
-      try {
       rgbHistogram[diffB*3]++; 
       rgbHistogram[1+diffG*3]++; 
       rgbHistogram[2+diffR*3]++;
-      }catch (Exception e) {
-        throw e;
-      }
     }
     
     return rgbHistogram;

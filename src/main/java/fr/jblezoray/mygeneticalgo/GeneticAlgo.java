@@ -98,10 +98,6 @@ public class GeneticAlgo {
   public void setMutationRate(float mutationRate) {
     this.mutationRate = mutationRate;
   }
-
-  public void setCurrentGenerationNumber(int currentGenerationNumber) {
-    this.generationCounter = currentGenerationNumber;
-  }
   
   /**
    * getter of the current population. 

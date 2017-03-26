@@ -10,4 +10,6 @@ public interface IFitness {
    */
   public double computeFitnessOf(FaceImage candidateToEvaluate);
   
+  public void init(FaceImage reference);
+  
 }

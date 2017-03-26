@@ -23,12 +23,31 @@ public class Main {
     File fileMask = new File(args[1]);
     File dirStatus = new File(args[2]);
     
-    FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, fileMask, dirStatus);
-
-    for (int i=0 ;; i+=2000) {
+    // to test some configurations : 
+    for (int i=0;; i++) {
+      String prefix;
+      IFitness fitness;
+      int choose = i%4;
+      if (choose==0) {
+        prefix = String.format("test%d FHRMS ", i);
+        fitness = new FitnessHistogramRMS();
+        
+      } else if (choose==1) {
+        prefix = String.format("test%d FHWP  ", i);
+        fitness = new FitnessHistogramWithPatch(10);
+        
+      } else if (choose==2) {
+        prefix = String.format("test%d FP    ", i);
+        fitness = new FitnessPatch(10);
+        
+      } else {
+        prefix = String.format("test%d FHRMSW", i);
+        fitness = new FitnessHistogramRMSWithWeight();
+      }
+      FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, 
+          fileMask, dirStatus, prefix, fitness);
       GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
-      ga.setCurrentGenerationNumber(i);
-      ga.evolve(10000);
+      ga.evolve(2000);
     }
   }
 

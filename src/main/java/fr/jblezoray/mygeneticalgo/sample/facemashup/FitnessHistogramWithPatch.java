@@ -3,39 +3,45 @@ package fr.jblezoray.mygeneticalgo.sample.facemashup;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
-public class FitnessPatchNoHistogram implements IFitness {
+/**
+ * Uses a RMS (Root Mean Square) analysis of the histogram of the image, to 
+ * computes its fitness relatively the image it was constructed with.
+ * 
+ * The histogram contains a patch to value comparison.
+ * 
+ * @author jib
+ *
+ */
+public class FitnessHistogramWithPatch implements IFitness {
 
   private BufferedImage image;
   private int patchSize;
   
-  private FitnessPatchNoHistogram(FaceImage original, int patchSize){
-    this.image = original.getImage();
-    if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
-      throw new RuntimeException("invalid image type : " + this.image.getType());
+  public FitnessHistogramWithPatch(int patchSize){
     this.patchSize = patchSize;
   }
-  
-  public static IFitness build(FaceImage reference, int patchSize) {
-    return new FitnessPatchNoHistogram(reference, patchSize);
-  }
 
+  @Override
+  public void init(FaceImage reference) {
+    this.image = reference.getImage();
+    if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
+      throw new RuntimeException("invalid image type : " + this.image.getType());
+  }
   
   @Override
   public double computeFitnessOf(FaceImage candidateToEvaluate) {
-    int[] patchDiff = patchDiffHistogram(candidateToEvaluate.getImage(), this.patchSize);
+    int[] histogram = patchDiffHistogram(candidateToEvaluate.getImage(), this.patchSize);
     
-    double sum = 0;
-    for (int n=0; n<patchDiff.length; n++)
-      sum += patchDiff[n];
-    double result = sum / patchDiff.length;
-    return 100 / result;
+    double sumSquaredValues = 0;
+    for (int n=0; n<histogram.length; n++)
+      sumSquaredValues += n * n * histogram[n];
+    double rms = Math.sqrt(sumSquaredValues / (this.image.getWidth() * this.image.getHeight()));
+    return 100 / rms;
   }
   
   
   private int[] patchDiffHistogram(BufferedImage other, int patchSize) {
     
-    // Grab raw data. Don't use getRGB(), it's performance is crappy (See 
-    // http://stackoverflow.com/a/9470843/2082935)
     byte[] pixelsThis = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
     byte[] pixelsOther = ((DataBufferByte) other.getRaster().getDataBuffer()).getData();
 
@@ -44,7 +50,7 @@ public class FitnessPatchNoHistogram implements IFitness {
     int w = image.getWidth();
     int h = image.getHeight();
     
-    int[] patchDiff = new int[pixelsThis.length];
+    int[] rgbHistogram = new int[256*3];
 
     for (int y=halfPatchSize; y<h-halfPatchSize; y++) {
       for (int x=halfPatchSize; x<w-halfPatchSize; x++) {
@@ -80,14 +86,14 @@ public class FitnessPatchNoHistogram implements IFitness {
         sumG = sumG / (patchSize*patchSize);
         sumR = sumR / (patchSize*patchSize);
 
-        // fill result array.
-        patchDiff[index] = sumB;
-        patchDiff[index+1] = sumG;
-        patchDiff[index+2] = sumR;
+        // fill histogram.
+        rgbHistogram[sumB*3]++; 
+        rgbHistogram[1+sumG*3]++; 
+        rgbHistogram[2+sumR*3]++;
       }
     }
     
-    return patchDiff;
+    return rgbHistogram;
   }
 
 }

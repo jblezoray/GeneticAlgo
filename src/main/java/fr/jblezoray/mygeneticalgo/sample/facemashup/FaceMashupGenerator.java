@@ -16,20 +16,24 @@ public class FaceMashupGenerator implements IPhenotype {
   private final FaceImage faceMask;
   private final File statusDir;
   private final FaceImageFactory faceImageFactory;
+  private final String dumpImagePrefix;
   
-  public FaceMashupGenerator(int numberOfBases, File faceMatch, File faceMask, File statusDir) 
+  public FaceMashupGenerator(int numberOfBases, File faceMatch, File faceMask, 
+      File statusDir, String dumpImagePrefix, IFitness fitness) 
       throws IOException{
-    this.faceMatchFitness = FitnessHistogramRMSWithWeight.build(new FaceImage(faceMatch, false));
+    this.faceMatchFitness = fitness;
+    this.faceMatchFitness.init(new FaceImage(faceMatch, false));
     this.faceMask = new FaceImage(faceMask, true);
     this.statusDir = statusDir;
     this.faceImageFactory = new FaceImageFactory(this.faceMask, numberOfBases);
+    this.dumpImagePrefix = dumpImagePrefix;
   }
   
   @Override
   public void notificationOfBestMatch(int generation, DNA dna) {
-    if (generation == 1 || generation % 100 == 0) {
-      System.out.printf("generation %7d : fitness %f : dna : %s\n", 
-          generation, dna.getFitness(), dna.toString());
+    if (generation == 1 || generation % 500 == 0) {
+      System.out.printf("%s %7d : fitness %f : dna : %s\n",
+          dumpImagePrefix, generation, dna.getFitness(), dna.toString());
       FaceImage bestMatch = this.faceImageFactory.fromDNA(dna);
       String filename = String.format("generation_%07d-%f.png", generation, dna.getFitness());
       try {

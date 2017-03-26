@@ -17,7 +17,8 @@ public class FitnessTest {
   public void testComputeFitnessOf_FitnessHistogramRMSFast() throws IOException {
     FaceImage matchImage = new FaceImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness frms = FitnessHistogramRMSFast.build(matchImage);
+    IFitness frms = new FitnessHistogramRMS();
+    frms.init(matchImage);
     computeFitnessWith(frms);
   }
   
@@ -26,7 +27,8 @@ public class FitnessTest {
   public void testComputeFitnessOf_FitnessPatchBased() throws IOException {
     FaceImage matchImage = new FaceImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness fpb = FitnessPatchBased.build(matchImage, 10);
+    IFitness fpb = new FitnessHistogramWithPatch(10);
+    fpb.init(matchImage);
     computeFitnessWith(fpb);
   }
   
@@ -35,7 +37,8 @@ public class FitnessTest {
   public void testComputeFitnessOf_FitnessPatchNoHistogram() throws IOException {
     FaceImage matchImage = new FaceImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness fpb = FitnessPatchNoHistogram.build(matchImage, 10);
+    IFitness fpb = new FitnessPatch(10);
+    fpb.init(matchImage);
     computeFitnessWith(fpb);
   }
   
@@ -44,7 +47,8 @@ public class FitnessTest {
   public void testComputeFitnessOf_FitnessHistogramRMSWithWeight() throws IOException {
     FaceImage matchImage = new FaceImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness fpb = FitnessHistogramRMSWithWeight.build(matchImage);
+    IFitness fpb = new FitnessHistogramRMSWithWeight();
+    fpb.init(matchImage);
     computeFitnessWith(fpb);
   }
   
@@ -56,8 +60,8 @@ public class FitnessTest {
     FaceImage matchImage = new FaceImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     
-    FitnessHistogramRMSWithWeight fitness = (FitnessHistogramRMSWithWeight)
-        FitnessHistogramRMSWithWeight.build(matchImage);
+    FitnessHistogramRMSWithWeight fitness = new FitnessHistogramRMSWithWeight();
+    fitness.init(matchImage);
     float[] weight = fitness.initWeight(20);
     byte[] visualisable = new byte[weight.length]; 
     for (int i=0; i<weight.length; i++) {

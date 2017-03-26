@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import fr.jblezoray.mygeneticalgo.DNA;
 
@@ -79,13 +80,13 @@ public class FaceImageFactory {
       // read five genes to generate an image.
       int i=0;
       while (i+5<=dna.size()) {
-        int xGene = dna.get(i++);
-        int yGene = dna.get(i++);
+        int positionGene1 = dna.get(i++);
+        int positionGene2 = dna.get(i++);
         int sizeGene = dna.get(i++);
         int rotGene = dna.get(i++);
         int alphaGene = dna.get(i++);
-        drawTransformedImage(graphics2D, xGene, yGene, sizeGene, rotGene, 
-            alphaGene);
+        drawTransformedImageFromGenes(graphics2D, positionGene1, positionGene2, sizeGene,
+            rotGene, alphaGene);
       }
     } finally {
       if (graphics2D!=null)
@@ -101,20 +102,35 @@ public class FaceImageFactory {
    * All parameters range must be in [0, this.numberOfBases[
    * 
    * @param target Canvas to draw on. 
-   * @param xGene The x translation gene.
-   * @param yGene The y translation gene.
+   * @param positionGene The 1st position gene.
+   * @param positionGene The 2nd position gene.
    * @param sizeGene The size gene.
    * @param rotGene The rotation gene.
    * @param alphaGene The alpha gene.
    */
-  private void drawTransformedImage(Graphics2D target, 
-      int xGene, int yGene, int sizeGene, int rotGene, int alphaGene) {
-    int x = xGene * this.w / this.numberOfBases;
-    int y = yGene * this.h / this.numberOfBases;
+  private void drawTransformedImageFromGenes(Graphics2D target, int positionGene1, 
+      int positionGene2, int sizeGene, int rotGene, int alphaGene) {
+    // We must correlate X and Y values, otherwise the mutations on the position
+    // affect either one or the other, which is undesirable as a mutation should
+    // affect both for a nice shift of the image in the canvas.
+    // 
+    // The constraints are that we must have :
+    // - a uniform distribution of the possibilities in the w*h space.  Doing 
+    //   (positionGene1*positionGene2) % (w*h) is NOT valid. 
+    // - a deterministic result. 
+    // 
+    // I ended seeding a PRNG, with very good results in terms of speed:
+    Random random = new Random(positionGene1 * positionGene2);
+    int x = random.nextInt(this.w);
+    int y = random.nextInt(this.h);
+    
     BufferedImage toDraw = allSizes.get(sizeGene);
+    
     double angleRad = rotGene * (2.0f * Math.PI) / (float)this.numberOfBases;
+    
     float opacity = alphaGene / ((float)this.numberOfBases); // in [0.0f, 1.0f]
     opacity = opacity * (1.0f - MIN_OPACITY) + MIN_OPACITY; // in [MIN_OPACITY, 1.0f]
+    
     drawTransformedImage(target, toDraw, x, y, angleRad, opacity);
   }
   
