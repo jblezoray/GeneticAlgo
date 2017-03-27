@@ -10,12 +10,19 @@ import javax.imageio.ImageIO;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitableImage;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMS;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMSWithWeight;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramWithPatch;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessPatch;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.IFitness;
+
 public class FitnessTest {
   
   
   @Test
   public void testComputeFitnessOf_FitnessHistogramRMSFast() throws IOException {
-    FaceImage matchImage = new FaceImage(ImageIO.read(
+    FitableImage matchImage = new FitableImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     IFitness frms = new FitnessHistogramRMS();
     frms.init(matchImage);
@@ -25,7 +32,7 @@ public class FitnessTest {
   
   @Test
   public void testComputeFitnessOf_FitnessPatchBased() throws IOException {
-    FaceImage matchImage = new FaceImage(ImageIO.read(
+    FitableImage matchImage = new FitableImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     IFitness fpb = new FitnessHistogramWithPatch(10);
     fpb.init(matchImage);
@@ -35,7 +42,7 @@ public class FitnessTest {
   
   @Test
   public void testComputeFitnessOf_FitnessPatchNoHistogram() throws IOException {
-    FaceImage matchImage = new FaceImage(ImageIO.read(
+    FitableImage matchImage = new FitableImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     IFitness fpb = new FitnessPatch(10);
     fpb.init(matchImage);
@@ -45,7 +52,7 @@ public class FitnessTest {
   
   @Test
   public void testComputeFitnessOf_FitnessHistogramRMSWithWeight() throws IOException {
-    FaceImage matchImage = new FaceImage(ImageIO.read(
+    FitableImage matchImage = new FitableImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     IFitness fpb = new FitnessHistogramRMSWithWeight();
     fpb.init(matchImage);
@@ -57,7 +64,7 @@ public class FitnessTest {
   @Ignore("Errr this is not a unit test")
   public void FitnessHistogramRMSWithWeight_dumpWeight() throws IOException {
     // TODO
-    FaceImage matchImage = new FaceImage(ImageIO.read(
+    FitableImage matchImage = new FitableImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     
     FitnessHistogramRMSWithWeight fitness = new FitnessHistogramRMSWithWeight();
@@ -71,22 +78,22 @@ public class FitnessTest {
 
     int w = matchImage.getImage().getWidth();
     int h = matchImage.getImage().getHeight(); 
-    new FaceImage(visualisable, w, h).writeToFile(new File("output.png"));
+    new FitableImage(visualisable, w, h).writeToFile(new File("output.png"));
   }
   
   
   
   private static void computeFitnessWith(IFitness frms) throws IOException {
     // having
-    FaceImage gen0001 = new FaceImage(ImageIO.read(
+    FitableImage gen0001 = new FitableImage(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0000001.png")), false);
-    FaceImage gen0100 = new FaceImage(ImageIO.read(
+    FitableImage gen0100 = new FitableImage(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0000100.png")), false);
-    FaceImage gen0500 = new FaceImage(ImageIO.read(
+    FitableImage gen0500 = new FitableImage(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0000500.png")), false);
-    FaceImage gen1000 = new FaceImage(ImageIO.read(
+    FitableImage gen1000 = new FitableImage(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0001000.png")), false);
-    FaceImage gen2000 = new FaceImage(ImageIO.read(
+    FitableImage gen2000 = new FitableImage(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0002000.png")), false);
     
     // when 

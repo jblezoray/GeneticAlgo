@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.facemashup;
+package fr.jblezoray.mygeneticalgo.sample.imagefitness;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -21,14 +21,14 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
   private float[] weigth = null;
 
   @Override
-  public void init(FaceImage original){
+  public void init(FitableImage original){
     this.image = original.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
   }
 
   @Override
-  public double computeFitnessOf(FaceImage candidateToEvaluate) {
+  public double computeFitnessOf(FitableImage candidateToEvaluate) {
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
     
@@ -98,7 +98,7 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
    * @return
    *    A weight array with values in in [MIN_WEIGHT, 1.0f].
    */
-  float[] initWeight(int patchSize) {
+  public float[] initWeight(int patchSize) {
     byte[] pixelsThis = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 
     int pixelLen = 3;

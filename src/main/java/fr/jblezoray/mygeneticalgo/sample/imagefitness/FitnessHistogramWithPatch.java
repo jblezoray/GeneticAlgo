@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.facemashup;
+package fr.jblezoray.mygeneticalgo.sample.imagefitness;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -22,14 +22,14 @@ public class FitnessHistogramWithPatch implements IFitness {
   }
 
   @Override
-  public void init(FaceImage reference) {
+  public void init(FitableImage reference) {
     this.image = reference.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
   }
   
   @Override
-  public double computeFitnessOf(FaceImage candidateToEvaluate) {
+  public double computeFitnessOf(FitableImage candidateToEvaluate) {
     int[] histogram = patchDiffHistogram(candidateToEvaluate.getImage(), this.patchSize);
     
     double sumSquaredValues = 0;

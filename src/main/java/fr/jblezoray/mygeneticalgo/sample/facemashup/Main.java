@@ -4,6 +4,11 @@ import java.io.File;
 import java.io.IOException;
 
 import fr.jblezoray.mygeneticalgo.GeneticAlgo;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMS;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMSWithWeight;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramWithPatch;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessPatch;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.IFitness;
 
 public class Main {
 

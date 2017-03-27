@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Random;
 
 import fr.jblezoray.mygeneticalgo.DNA;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitableImage;
 
 /**
  * Builds an Image from some DNA.
@@ -27,7 +28,7 @@ public class FaceImageFactory {
   private int h;
   private int numberOfBases;
   
-  public FaceImageFactory(FaceImage face, int numberOfBases) throws IOException {
+  public FaceImageFactory(FitableImage face, int numberOfBases) throws IOException {
     this.w = face.getImage().getWidth();
     this.h = face.getImage().getHeight();
     this.numberOfBases = numberOfBases;
@@ -42,7 +43,7 @@ public class FaceImageFactory {
    * @param face
    * @throws IOException
    */
-  private void createAllSizes(FaceImage face) throws IOException {
+  private void createAllSizes(FitableImage face) throws IOException {
     this.allSizes = new ArrayList<>(this.numberOfBases);
     BufferedImage sourceImage = face.getImage();
     for (int n=0; n<this.numberOfBases; n++) {
@@ -68,7 +69,7 @@ public class FaceImageFactory {
    * @param dna
    * @return
    */
-  public FaceImage fromDNA(DNA dna) {
+  public FitableImage fromDNA(DNA dna) {
     // create a new blank image. 
     BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
     Graphics2D graphics2D = null;
@@ -92,7 +93,7 @@ public class FaceImageFactory {
       if (graphics2D!=null)
         graphics2D.dispose();
     }
-    return new FaceImage(image, false);
+    return new FitableImage(image, false);
   }
   
 

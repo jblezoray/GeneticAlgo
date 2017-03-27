@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.facemashup;
+package fr.jblezoray.mygeneticalgo.sample.imagefitness;
 
 public interface IFitness {
 
@@ -8,8 +8,8 @@ public interface IFitness {
    * @param candidateToEvaluate
    * @return an evaluation note in range [0.0f, 1.0f] 
    */
-  public double computeFitnessOf(FaceImage candidateToEvaluate);
+  public double computeFitnessOf(FitableImage candidateToEvaluate);
   
-  public void init(FaceImage reference);
+  public void init(FitableImage reference);
   
 }

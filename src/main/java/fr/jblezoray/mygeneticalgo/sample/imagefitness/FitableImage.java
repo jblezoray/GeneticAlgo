@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.facemashup;
+package fr.jblezoray.mygeneticalgo.sample.imagefitness;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -11,16 +11,16 @@ import javax.imageio.ImageIO;
  * 
  * @author jib
  */
-public class FaceImage {
+public class FitableImage {
 
   private final BufferedImage image;
 
-  public FaceImage(File f, boolean hasAlpha) throws IOException {
+  public FitableImage(File f, boolean hasAlpha) throws IOException {
     this(ImageIO.read(f), hasAlpha);
   }
 
   
-  public FaceImage(BufferedImage source, boolean hasAlpha) {
+  public FitableImage(BufferedImage source, boolean hasAlpha) {
     
     int type = hasAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
     
@@ -37,7 +37,7 @@ public class FaceImage {
   }
   
   
-  public FaceImage(byte[] bgr, int width, int height) {
+  public FitableImage(byte[] bgr, int width, int height) {
     BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
