@@ -4,11 +4,16 @@ import java.io.File;
 import java.io.IOException;
 
 import fr.jblezoray.mygeneticalgo.GeneticAlgo;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMS;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMSWithWeight;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramWithPatch;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessPatch;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.IFitness;
 
 public class Main {
 
-  private static final int POP_SIZE = 50;
-  private static final int DNA_LENGTH = 5 * 100;
+  private static final int POP_SIZE = 100;
+  private static final int DNA_LENGTH = 5 * 150;
   private static final int NB_OF_BASES = 1000;
   
   
@@ -23,15 +28,32 @@ public class Main {
     File fileMask = new File(args[1]);
     File dirStatus = new File(args[2]);
     
-    FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, fileMask, dirStatus);
-    GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
-    ga.setTournamentFraction(0.6f);
-    ga.setMutationRate(0.0001f);
-    ga.evolve(1000);
-    ga.setMutationRate(0.001f);
-    ga.evolve(1000);
-    ga.setMutationRate(0.01f);
-    ga.evolve(1000);
+    // to test some configurations : 
+    for (int i=0;; i++) {
+      String prefix;
+      IFitness fitness;
+      int choose = i%4;
+      if (choose==0) {
+        prefix = String.format("test%d FHRMS ", i);
+        fitness = new FitnessHistogramRMS();
+        
+      } else if (choose==1) {
+        prefix = String.format("test%d FHWP  ", i);
+        fitness = new FitnessHistogramWithPatch(10);
+        
+      } else if (choose==2) {
+        prefix = String.format("test%d FP    ", i);
+        fitness = new FitnessPatch(10);
+        
+      } else {
+        prefix = String.format("test%d FHRMSW", i);
+        fitness = new FitnessHistogramRMSWithWeight();
+      }
+      FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, 
+          fileMask, dirStatus, prefix, fitness);
+      GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
+      ga.evolve(2000);
+    }
   }
 
   private static void printUsage() {

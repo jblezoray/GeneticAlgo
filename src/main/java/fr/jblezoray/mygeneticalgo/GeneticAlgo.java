@@ -48,17 +48,27 @@ public class GeneticAlgo {
     this.populationSize = populationSize;
     this.numberOfBases = numberOfBases;
     this.dnaLength = dnaLength;
-    
     this.phenotype = phenotype;
-    
     this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
     this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
     this.setMutationRate(DEFAULT_MUTATION_RATE);
-    
     populatePopulation();
   }
   
   
+  public GeneticAlgo(List<DNA> population, int numberOfBases, 
+      IPhenotype phenotype) {
+    this.populationSize = population.size();
+    this.numberOfBases = numberOfBases;
+    this.dnaLength = population.get(0).size(); // TODO handle case size 0
+    this.phenotype = phenotype;
+    this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
+    this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
+    this.setMutationRate(DEFAULT_MUTATION_RATE);
+    this.population = population;
+  }
+
+
   /**
    * 
    * @param tournamentFraction
@@ -88,7 +98,17 @@ public class GeneticAlgo {
   public void setMutationRate(float mutationRate) {
     this.mutationRate = mutationRate;
   }
-
+  
+  /**
+   * getter of the current population. 
+   * @return
+   *    current population, ordered with best fitness first.
+   */
+  public List<DNA> getPopulation () {
+    this.population.sort(BETTER_FITNESS_FIRST);
+    return this.population;
+  }
+  
   
   /**
    * Creates a random new population. 
