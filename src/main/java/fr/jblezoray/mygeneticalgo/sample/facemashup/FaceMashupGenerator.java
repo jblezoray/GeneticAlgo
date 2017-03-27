@@ -35,7 +35,7 @@ public class FaceMashupGenerator implements IPhenotype {
       System.out.printf("%s %7d : fitness %f : dna : %s\n",
           dumpImagePrefix, generation, dna.getFitness(), dna.toString());
       FaceImage bestMatch = this.faceImageFactory.fromDNA(dna);
-      String filename = String.format("generation_%07d-%f.png", generation, dna.getFitness());
+      String filename = String.format("%s-%07d-%f.png", dumpImagePrefix, generation, dna.getFitness());
       try {
         bestMatch.writeToFile(new File(statusDir, filename));
       } catch (IOException e) {
