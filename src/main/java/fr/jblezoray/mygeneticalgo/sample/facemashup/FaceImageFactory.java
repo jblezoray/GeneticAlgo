@@ -9,7 +9,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import fr.jblezoray.mygeneticalgo.DNA;
 import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitableImage;
@@ -47,9 +46,7 @@ public class FaceImageFactory {
     this.allSizes = new ArrayList<>(this.numberOfBases);
     BufferedImage sourceImage = face.getImage();
     for (int n=0; n<this.numberOfBases; n++) {
-      float scale = n / (float)this.numberOfBases;// in [0.0, 1.0] 
-      scale = (scale * (MAX_SCALE - MIN_SCALE)) + MIN_SCALE;// in [MIN_SCALE, MAX_SCALE]
-      
+      float scale = DNA.normalizeFloat(n, 0, this.numberOfBases, MIN_SCALE, MAX_SCALE);
       int newWidth = Math.round(this.w * scale);
       int newHeight = Math.round(this.h * scale);
       BufferedImage resizedImg = new BufferedImage(newWidth, newHeight, BufferedImage.TRANSLUCENT);
@@ -111,27 +108,14 @@ public class FaceImageFactory {
    */
   private void drawTransformedImageFromGenes(Graphics2D target, int positionGene1, 
       int positionGene2, int sizeGene, int rotGene, int alphaGene) {
-    // We must correlate X and Y values, otherwise the mutations on the position
-    // affect either one or the other, which is undesirable as a mutation should
-    // affect both for a nice shift of the image in the canvas.
-    // 
-    // The constraints are that we must have :
-    // - a uniform distribution of the possibilities in the w*h space.  Doing 
-    //   (positionGene1*positionGene2) % (w*h) is NOT valid. 
-    // - a deterministic result. 
-    // 
-    // I ended seeding a PRNG, with very good results in terms of speed:
-    Random random = new Random(positionGene1 * positionGene2);
-    int x = random.nextInt(this.w);
-    int y = random.nextInt(this.h);
-    
+    int[] c = DNA.correlate(positionGene1, positionGene2, this.w, this.h);
+    int x = c[0];
+    int y = c[1];
     BufferedImage toDraw = allSizes.get(sizeGene);
-    
-    double angleRad = rotGene * (2.0f * Math.PI) / (float)this.numberOfBases;
-    
-    float opacity = alphaGene / ((float)this.numberOfBases); // in [0.0f, 1.0f]
-    opacity = opacity * (1.0f - MIN_OPACITY) + MIN_OPACITY; // in [MIN_OPACITY, 1.0f]
-    
+    float angleRad = DNA.normalizeFloat(rotGene, 0.0f, this.numberOfBases, 
+        0.0f, (float)(2.0f * Math.PI));
+    float opacity = DNA.normalizeFloat(alphaGene, 0.0f, this.numberOfBases, 
+        MIN_OPACITY, 1.0f);
     drawTransformedImage(target, toDraw, x, y, angleRad, opacity);
   }
   
@@ -147,7 +131,7 @@ public class FaceImageFactory {
    * @param opacity, range [0.0f, 1.0f].
    */
   private static void drawTransformedImage(Graphics2D target, 
-      BufferedImage imgToDraw, int x, int y, double angleRad, float opacity) {
+      BufferedImage imgToDraw, int x, int y, float angleRad, float opacity) {
     int imgW = imgToDraw.getWidth();
     int imgH = imgToDraw.getHeight();
     AffineTransform transformation = new AffineTransform();
