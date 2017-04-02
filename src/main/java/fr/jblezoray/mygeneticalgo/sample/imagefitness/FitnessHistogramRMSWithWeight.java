@@ -14,8 +14,8 @@ import java.util.stream.IntStream;
  */
 public class FitnessHistogramRMSWithWeight implements IFitness {
   
-  private static float MIN_WEIGHT = 0.1f;
-  private static int PATCH_SIZE = 20;
+  private static float MIN_WEIGHT = 0.4f;
+  private static int PATCH_SIZE = 10;
   
   private BufferedImage image;
   private float[] weigth = null;
@@ -37,8 +37,19 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
     double sumSquaredValues = 0;
     for (int n=0; n<histogram.length; n++)
       sumSquaredValues += n * n * histogram[n];
-    double rms = Math.sqrt(sumSquaredValues / (this.image.getWidth() * this.image.getHeight()));
+    double rms = Math.sqrt(sumSquaredValues / 
+        (this.image.getWidth() * this.image.getHeight()));
     return 100 / rms;
+  }
+  
+  
+  public FitableImage getWeightAsImage() {
+    byte[] bgr = new byte[this.weigth.length];
+    for (int i=0; i<this.weigth.length; i++) {
+      int byteAsInt = (int)(this.weigth[i] * 256.0f);
+      bgr[i] = (byte)(byteAsInt - 128);
+    }
+    return new FitableImage(bgr, this.image.getWidth(), this.image.getHeight());
   }
   
   
