@@ -15,16 +15,18 @@ import java.util.stream.IntStream;
 public class FitnessHistogramRMSWithWeight implements IFitness {
   
   private static float MIN_WEIGHT = 0.4f;
-  private static int PATCH_SIZE = 10;
   
+  private int patchSize;
   private BufferedImage image;
   private float[] weigth = null;
 
+  
   @Override
   public void init(FitableImage original){
     this.image = original.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
+    this.patchSize = this.image.getWidth() / 20; 
   }
 
   @Override
@@ -47,7 +49,7 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
     byte[] bgr = new byte[this.weigth.length];
     for (int i=0; i<this.weigth.length; i++) {
       int byteAsInt = (int)(this.weigth[i] * 256.0f);
-      bgr[i] = (byte)(byteAsInt - 128);
+      bgr[i] = (byte)byteAsInt;
     }
     return new FitableImage(bgr, this.image.getWidth(), this.image.getHeight());
   }
@@ -63,7 +65,7 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
   private int[] diffHistogram(BufferedImage other) {
   
     synchronized (this) {
-      if (this.weigth==null) initWeight(PATCH_SIZE); 
+      if (this.weigth==null) initWeight(); 
     }
     byte[] pixelsThis = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
     byte[] pixelsOther = ((DataBufferByte) other.getRaster().getDataBuffer()).getData();
@@ -109,7 +111,7 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
    * @return
    *    A weight array with values in in [MIN_WEIGHT, 1.0f].
    */
-  public float[] initWeight(int patchSize) {
+  public float[] initWeight() {
     byte[] pixelsThis = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 
     int pixelLen = 3;

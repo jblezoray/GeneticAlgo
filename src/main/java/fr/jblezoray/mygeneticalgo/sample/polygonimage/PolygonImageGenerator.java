@@ -14,6 +14,7 @@ public class PolygonImageGenerator implements IPhenotype {
   private final PolygonImageFactory polygonImageFactory;
   private final File statusDir;
   
+  private long timestamp;
   private int curLineLength = 0; 
   
   public PolygonImageGenerator(File imageFile, IFitness fitness, File statusDir, 
@@ -25,6 +26,7 @@ public class PolygonImageGenerator implements IPhenotype {
     this.polygonImageFactory = new PolygonImageFactory(
         img.getImage().getWidth(), img.getImage().getHeight(), numberOfBases);
     this.statusDir = statusDir;
+    this.timestamp = System.currentTimeMillis();
   }
   
   @Override
@@ -41,14 +43,17 @@ public class PolygonImageGenerator implements IPhenotype {
     for (int i=0; i<curLineLength; i++) builder.append('\b');
     System.out.print(builder.toString());
     
-    // print new status line. 
-    String statusLine = String.format("generation %7d : fitness %f",
-        generation, dna.getFitness());
+    // print new status line.
+    long curtime = System.currentTimeMillis();
+    long timediff = curtime - timestamp;
+    this.timestamp = curtime;
+    String statusLine = String.format("generation %7d : fitness %3.5f : time %7dms",
+        generation, dna.getFitness(), timediff);
     curLineLength = statusLine.length();
     System.out.printf(statusLine);
     System.out.flush();
     
-    if (generation == 1 || generation % 1000 == 0) {
+    if (generation == 1 || generation % 200 == 0) {
       // keeps current status line, and moves to the next line. 
       System.out.println();
       System.out.flush();  
@@ -64,5 +69,5 @@ public class PolygonImageGenerator implements IPhenotype {
       }
     }
   }
-
+  
 }

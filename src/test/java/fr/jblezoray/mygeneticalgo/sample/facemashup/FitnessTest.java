@@ -63,13 +63,12 @@ public class FitnessTest {
   @Test
   @Ignore("Errr this is not a unit test")
   public void FitnessHistogramRMSWithWeight_dumpWeight() throws IOException {
-    // TODO
     FitableImage matchImage = new FitableImage(ImageIO.read(
         this.getClass().getResourceAsStream("/match.png")), false);
     
     FitnessHistogramRMSWithWeight fitness = new FitnessHistogramRMSWithWeight();
     fitness.init(matchImage);
-    float[] weight = fitness.initWeight(20);
+    float[] weight = fitness.initWeight();
     byte[] visualisable = new byte[weight.length]; 
     for (int i=0; i<weight.length; i++) {
       float w =  weight[i];
