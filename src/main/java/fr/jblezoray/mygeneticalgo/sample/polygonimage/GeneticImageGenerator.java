@@ -8,22 +8,22 @@ import fr.jblezoray.mygeneticalgo.IPhenotype;
 import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitableImage;
 import fr.jblezoray.mygeneticalgo.sample.imagefitness.IFitness;
 
-public class PolygonImageGenerator implements IPhenotype {
+public class GeneticImageGenerator implements IPhenotype {
 
   private final IFitness fitness;
-  private final PolygonImageFactory polygonImageFactory;
+  private final CircleImageFactory polygonImageFactory;
   private final File statusDir;
   
   private long timestamp;
   private int curLineLength = 0; 
   
-  public PolygonImageGenerator(File imageFile, IFitness fitness, File statusDir, 
+  public GeneticImageGenerator(File imageFile, IFitness fitness, File statusDir, 
       int numberOfBases) throws IOException {
     FitableImage img = new FitableImage(imageFile, false);
     
     this.fitness = fitness;
     this.fitness.init(img);
-    this.polygonImageFactory = new PolygonImageFactory(
+    this.polygonImageFactory = new CircleImageFactory(
         img.getImage().getWidth(), img.getImage().getHeight(), numberOfBases);
     this.statusDir = statusDir;
     this.timestamp = System.currentTimeMillis();
