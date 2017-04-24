@@ -16,7 +16,6 @@ public class GeneticAlgo {
   
   private final int populationSize;
   private final int numberOfBases;
-  private final int dnaLength;
   private final IPhenotype phenotype;
   
   private int generationCounter = 0;
@@ -39,36 +38,21 @@ public class GeneticAlgo {
   /**
    * Create a new Genetic algorithm with an initial population.
    * @param populationSize
-   * @param dnaLength
    * @param numberOfBases
+   * @param initialDNAlength
    * @param resultListener
    */
-  public GeneticAlgo(int populationSize, int dnaLength, int numberOfBases, 
+  public GeneticAlgo(int populationSize, int numberOfBases, int initialDNAlength,
       IPhenotype phenotype) {
     this.populationSize = populationSize;
     this.numberOfBases = numberOfBases;
-    this.dnaLength = dnaLength;
     this.phenotype = phenotype;
     this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
     this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
     this.setMutationRate(DEFAULT_MUTATION_RATE);
-    populatePopulation();
+    populatePopulation(initialDNAlength);
   }
   
-  
-  public GeneticAlgo(List<DNA> population, int numberOfBases, 
-      IPhenotype phenotype) {
-    this.populationSize = population.size();
-    this.numberOfBases = numberOfBases;
-    this.dnaLength = population.get(0).size(); // TODO handle case size 0
-    this.phenotype = phenotype;
-    this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
-    this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
-    this.setMutationRate(DEFAULT_MUTATION_RATE);
-    this.population = population;
-  }
-
-
   /**
    * 
    * @param tournamentFraction
@@ -116,10 +100,10 @@ public class GeneticAlgo {
    * Each individual of the population is created with a random list of 
    * integers.
    */
-  private void populatePopulation() {
+  private void populatePopulation(int initialDNAlength) {
     this.population = new ArrayList<>(this.populationSize);
     for (int i=0; i<this.populationSize; i++) {
-      DNA dna = DNA.create(RANDOM, this.dnaLength, this.numberOfBases);
+      DNA dna = DNA.create(RANDOM, initialDNAlength, this.numberOfBases);
       this.population.add(dna);
     }
   }
@@ -224,13 +208,18 @@ public class GeneticAlgo {
     boolean takeChild1atFirst = RANDOM.nextBoolean();
     DNA dnaA = new DNA( takeChild1atFirst ? pair.getMate1() : pair.getMate2());
     DNA dnaB = new DNA( takeChild1atFirst ? pair.getMate2() : pair.getMate1());
+    
+    int minSize = dnaA.size()>dnaB.size() ? dnaB.size() : dnaA.size(); 
     for (int i=0; i<nbCrossovers; i++) {
-      int pivot = RANDOM.nextInt(this.dnaLength);
-      for (int j=pivot; j<this.dnaLength; j++) {
-        int element = dnaA.get(j);
-        dnaA.set(j, dnaB.get(j));
-        dnaB.set(j, element);
-      }
+      int pivot = RANDOM.nextInt(minSize);
+      List<Integer> a1 = dnaA.subList(0, pivot);
+      List<Integer> a2 = dnaA.subList(pivot, dnaA.size());
+      List<Integer> b1 = dnaB.subList(0, pivot);
+      List<Integer> b2 = dnaB.subList(pivot, dnaB.size());
+      a1.addAll(b2);
+      b1.addAll(a2);
+      dnaA = new DNA(a1);
+      dnaB = new DNA(b1);
     }
     
     MatingPair childs = new MatingPair();
@@ -247,10 +236,10 @@ public class GeneticAlgo {
   private void doMutate(DNA dna) {
     
     // TODO this method should not be deterministic in terms of number of mutation.  
-    
-    int nbMutations = (int)Math.ceil(this.dnaLength * this.mutationRate);
+    int dnaLength = dna.size();
+    int nbMutations = (int)Math.ceil(dnaLength * this.mutationRate);
     for (int i=0; i<nbMutations; i++) {
-      int mutationIndex = RANDOM.nextInt(this.dnaLength);
+      int mutationIndex = RANDOM.nextInt(dnaLength);
       int newValue = RANDOM.nextInt(this.numberOfBases);
       dna.set(mutationIndex, newValue);
     }

@@ -3,6 +3,7 @@ package fr.jblezoray.mygeneticalgo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -32,6 +33,14 @@ public final class DNA extends ArrayList<Integer> {
    */
   public DNA(DNA dna) {
     super(dna);
+  }
+
+  /**
+   * Copy constructor.
+   * @param dna
+   */
+  public DNA(List<Integer> ints) {
+    super(ints);
   }
   
   /**
