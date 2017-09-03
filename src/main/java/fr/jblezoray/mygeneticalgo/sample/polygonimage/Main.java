@@ -14,11 +14,6 @@ import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMS;
  */
 public class Main {
   
-
-  private static final int POP_SIZE = 100;
-  private static final int DNA_LENGTH = 500 * CircleImageFactory.GENES_PER_IMAGE;
-  private static final int NB_OF_BASES = 1000;
-
   public static void main(String[] args) throws IOException {
 
 //    if (args.length!=2) {
@@ -29,14 +24,10 @@ public class Main {
     File dirStatus = new File("statusDir");
     
     FitnessHistogramRMS fitness = new FitnessHistogramRMS();
-    GeneticImageGenerator gig = new GeneticImageGenerator(imageFile, fitness, 
-        dirStatus, NB_OF_BASES);
-    GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, gig);
-    ga.setMutationRate(0.005f);
-    ga.evolve();
-    while (true) {
+    DisksImageGenerator gig = new DisksImageGenerator(imageFile, fitness, dirStatus);
+    GeneticAlgo<DisksImage> ga = new GeneticAlgo<>(gig);
+    while (true)
       ga.evolve();
-    }
   }
 
 //  private static void printUsage() {

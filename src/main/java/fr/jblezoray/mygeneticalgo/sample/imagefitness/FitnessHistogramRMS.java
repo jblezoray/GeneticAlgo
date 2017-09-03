@@ -17,14 +17,14 @@ public class FitnessHistogramRMS implements IFitness {
   private BufferedImage image;
   
   @Override
-  public void init(FitableImage reference) {
+  public void init(AbstractFitableImage reference) {
     this.image = reference.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
   }
 
   @Override
-  public double computeFitnessOf(FitableImage candidateToEvaluate) {
+  public double computeFitnessOf(AbstractFitableImage candidateToEvaluate) {
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
     

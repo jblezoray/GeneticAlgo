@@ -4,15 +4,13 @@ import java.io.File;
 import java.io.IOException;
 
 import fr.jblezoray.mygeneticalgo.GeneticAlgo;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMSWithWeight;
+import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramWithPatch;
 import fr.jblezoray.mygeneticalgo.sample.imagefitness.IFitness;
 
 public class Main {
 
-  private static final int POP_SIZE = 100;
-  private static final int DNA_LENGTH = 5 * 150;
-  private static final int NB_OF_BASES = 1000;
-  
+  private static final int POP_SIZE = 200;
+  private final static int NB_FACES_PER_IMAGE = 100;
   
   public static void main(String[] args) throws IOException {
     
@@ -25,10 +23,10 @@ public class Main {
     File fileMask = new File(args[1]);
     File dirStatus = new File(args[2]);
     
-    IFitness fitness = new FitnessHistogramRMSWithWeight();
-    FaceMashupGenerator fma = new FaceMashupGenerator(NB_OF_BASES, fileMatch, 
-        fileMask, dirStatus, "generation ", fitness);
-    GeneticAlgo ga = new GeneticAlgo(POP_SIZE, DNA_LENGTH, NB_OF_BASES, fma);
+    IFitness fitness = new FitnessHistogramWithPatch(5);
+    FaceMashupGenerator fma = new FaceMashupGenerator(fileMatch, fileMask, 
+        dirStatus, fitness, POP_SIZE, NB_FACES_PER_IMAGE);
+    GeneticAlgo<FaceImage> ga = new GeneticAlgo<>(fma);
     ga.evolve(2000);
   }
 

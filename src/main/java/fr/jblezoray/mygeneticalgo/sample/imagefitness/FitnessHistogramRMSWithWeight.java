@@ -22,7 +22,7 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
 
   
   @Override
-  public void init(FitableImage original){
+  public void init(AbstractFitableImage original){
     this.image = original.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
@@ -30,7 +30,7 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
   }
 
   @Override
-  public double computeFitnessOf(FitableImage candidateToEvaluate) {
+  public double computeFitnessOf(AbstractFitableImage candidateToEvaluate) {
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
     
@@ -45,13 +45,14 @@ public class FitnessHistogramRMSWithWeight implements IFitness {
   }
   
   
-  public FitableImage getWeightAsImage() {
+  public AbstractFitableImage getWeightAsImage() {
     byte[] bgr = new byte[this.weigth.length];
     for (int i=0; i<this.weigth.length; i++) {
       int byteAsInt = (int)(this.weigth[i] * 256.0f);
       bgr[i] = (byte)byteAsInt;
     }
-    return new FitableImage(bgr, this.image.getWidth(), this.image.getHeight());
+    return new UnmodifiableFitableImage(bgr, this.image.getWidth(), 
+        this.image.getHeight());
   }
   
   

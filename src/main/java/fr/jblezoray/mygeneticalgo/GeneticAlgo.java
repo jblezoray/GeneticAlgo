@@ -1,22 +1,21 @@
 package fr.jblezoray.mygeneticalgo;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
-public class GeneticAlgo {
+public class GeneticAlgo<DNA extends DNAAbstract> {
 
-  private static final Random RANDOM = new Random();
+  private static final Random RANDOM = new Random(System.currentTimeMillis());
 
   private static final double DEFAULT_TOURNAMENT_FRACTION = 0.6f;
-  private static final float DEFAULT_MUTATION_RATE = 0.001f;
+  private static final float DEFAULT_MUTATION_RATE = 0.005f;
   private static final int DEFAULT_MIN_CROSSOVER = 1;
   private static final int DEFAULT_MAX_CROSSOVER = 3;
   
-  private final int populationSize;
-  private final int numberOfBases;
-  private final IPhenotype phenotype;
+  private final IPhenotype<DNA> phenotype;
   
   private int generationCounter = 0;
   private int tournamentSize;
@@ -26,31 +25,30 @@ public class GeneticAlgo {
   private int maxCrossovers;
   private float mutationRate;
 
-  private final static Comparator<DNA> BETTER_FITNESS_FIRST = 
-      new Comparator<DNA>() {
+  private final static Comparator<DNAAbstract> BETTER_FITNESS_FIRST = 
+      new Comparator<DNAAbstract>() {
         @Override
-        public int compare(DNA i1, DNA i2) {
+        public int compare(DNAAbstract i1, DNAAbstract i2) {
           return (i1==null || i2 == null) ? 0
               : - Double.compare(i1.getFitness(), i2.getFitness());
         }
       };
   
+  
   /**
    * Create a new Genetic algorithm with an initial population.
-   * @param populationSize
-   * @param numberOfBases
-   * @param initialDNAlength
-   * @param resultListener
+   * @param phenotype
    */
-  public GeneticAlgo(int populationSize, int numberOfBases, int initialDNAlength,
-      IPhenotype phenotype) {
-    this.populationSize = populationSize;
-    this.numberOfBases = numberOfBases;
+  public GeneticAlgo(IPhenotype<DNA> phenotype) {
+    Collection<DNA> population = phenotype.createInitialPopulation(RANDOM);
+    if (population.size() < 2)
+      throw new RuntimeException("population size must be >= 2");
+    this.population = new ArrayList<DNA>(population.size());
+    this.population.addAll(population);
     this.phenotype = phenotype;
     this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
     this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
     this.setMutationRate(DEFAULT_MUTATION_RATE);
-    populatePopulation(initialDNAlength);
   }
   
   /**
@@ -58,7 +56,7 @@ public class GeneticAlgo {
    * @param tournamentFraction
    */
   public void setTournamentFraction(double tournamentFraction) {
-    this.tournamentSize = (int) Math.ceil(populationSize*tournamentFraction);
+    this.tournamentSize = (int) Math.ceil(this.population.size() * tournamentFraction);
   }
 
   /**
@@ -74,38 +72,25 @@ public class GeneticAlgo {
   /**
    * Adjust the mutation rate.
    * 
-   * The mutation rate is the probability of an injecting a mutation 
+   * The mutation rate is the probability for a DNA base to be mutated at each 
+   * generation. Higher mutation rates enable faster convergence, but has less 
+   * precision.
    * 
-   * Higher mutation rate enables a faster convergence, but less precision.
    * @param mutationRate
    */
   public void setMutationRate(float mutationRate) {
     this.mutationRate = mutationRate;
   }
   
+  
   /**
    * getter of the current population. 
    * @return
    *    current population, ordered with best fitness first.
    */
-  public List<DNA> getPopulation () {
+  public List<DNA> getPopulation() {
     this.population.sort(BETTER_FITNESS_FIRST);
     return this.population;
-  }
-  
-  
-  /**
-   * Creates a random new population. 
-   * 
-   * Each individual of the population is created with a random list of 
-   * integers.
-   */
-  private void populatePopulation(int initialDNAlength) {
-    this.population = new ArrayList<>(this.populationSize);
-    for (int i=0; i<this.populationSize; i++) {
-      DNA dna = DNA.create(RANDOM, initialDNAlength, this.numberOfBases);
-      this.population.add(dna);
-    }
   }
   
 
@@ -115,45 +100,56 @@ public class GeneticAlgo {
    *    The population will evolve for this much generations. 
    */
   public void evolve(int howManyGenerations) {
-    boolean hasBestEvaluationResult = false; 
-    for (int i=0; i<howManyGenerations && !hasBestEvaluationResult; i++)
-      hasBestEvaluationResult = evolve();
+    for (int i=0; i<howManyGenerations; i++) {
+      evolve();
+    }
   }
   
   
   /**
    * Evolve the population for one generation.
-   * 
-   * @return
    */
-  public boolean evolve() {
-    this.generationCounter++;
-    
+  public void evolve() {
     // compute fitness
     this.population.parallelStream().forEach(dna -> {
       double fitness = this.phenotype.computeFitness(dna);
       dna.setFitness(fitness);
     });
     
-    // notify of best result for this generation
+    // notification for the best result in this generation
     this.population.sort(BETTER_FITNESS_FIRST);
     DNA bestOne = this.population.get(0);
-    phenotype.notificationOfBestMatch(generationCounter, bestOne);
+    phenotype.notificationOfBestMatch(++this.generationCounter, bestOne);
     
     // create a new population.
-    List<DNA> newPopulation = new ArrayList<>(this.populationSize);
+    List<DNA> newPopulation = new ArrayList<>(this.population.size());
     int i=0;
-    while (i+2<=this.populationSize) {
+    while (i+2<=this.population.size()) {
       i+=2;
+      // select 2 parents
       MatingPair parentsPair = tournamentSelection();
-      MatingPair childPair = doDnaCrossover(parentsPair);
-      doMutate(childPair.getMate1());
-      doMutate(childPair.getMate2());
-      newPopulation.add(new DNA(childPair.getMate1()));
-      newPopulation.add(new DNA(childPair.getMate2()));
+      
+      // copy the DNA of the parents  
+      MatingPair childPair = new MatingPair();
+      childPair.mate1 = parentsPair.mate1.copy();
+      childPair.mate2 = parentsPair.mate2.copy();
+      
+      // crossover and mutate the two children. 
+      childPair.mate1.doDNACrossover(RANDOM, childPair.mate2, this.minCrossovers, this.maxCrossovers);
+      childPair.mate1.doMutate(RANDOM, this.mutationRate);
+      childPair.mate2.doMutate(RANDOM, this.mutationRate);
+      
+      // add to the new population.
+      newPopulation.add(childPair.mate1);
+      newPopulation.add(childPair.mate2);
     }
     this.population = newPopulation;
-    return false;
+  }
+
+  
+  private class MatingPair {
+    DNA mate1;
+    DNA mate2;
   }
 
   
@@ -184,65 +180,10 @@ public class GeneticAlgo {
     // (size is always >2 at this moment).
     chosenOnes.sort(BETTER_FITNESS_FIRST);
     MatingPair matingPair = new MatingPair(); 
-    matingPair.setMate1(chosenOnes.get(0));
-    matingPair.setMate2(chosenOnes.get(1));
+    matingPair.mate1 = chosenOnes.get(0);
+    matingPair.mate2 = chosenOnes.get(1);
     
     return matingPair;
-  }
-  
-
-  /**
-   * Crossover the mating pair's DNA so many times according to crossover rate.
-   * 
-   * @param pair
-   *    The pair to crossover.
-   * @return
-   *    A copy of the pair, crossovered.
-   */
-  private MatingPair doDnaCrossover(MatingPair pair) {
-
-    int nbCrossovers = RANDOM.nextInt(this.maxCrossovers - this.minCrossovers)
-        + this.minCrossovers;
-    
-    // work on copies to not alter originals.
-    boolean takeChild1atFirst = RANDOM.nextBoolean();
-    DNA dnaA = new DNA( takeChild1atFirst ? pair.getMate1() : pair.getMate2());
-    DNA dnaB = new DNA( takeChild1atFirst ? pair.getMate2() : pair.getMate1());
-    
-    int minSize = dnaA.size()>dnaB.size() ? dnaB.size() : dnaA.size(); 
-    for (int i=0; i<nbCrossovers; i++) {
-      int pivot = RANDOM.nextInt(minSize);
-      List<Integer> a1 = dnaA.subList(0, pivot);
-      List<Integer> a2 = dnaA.subList(pivot, dnaA.size());
-      List<Integer> b1 = dnaB.subList(0, pivot);
-      List<Integer> b2 = dnaB.subList(pivot, dnaB.size());
-      a1.addAll(b2);
-      b1.addAll(a2);
-      dnaA = new DNA(a1);
-      dnaB = new DNA(b1);
-    }
-    
-    MatingPair childs = new MatingPair();
-    childs.setMate1(new DNA(dnaA));
-    childs.setMate2(new DNA(dnaB));
-    return childs;
-  }
-
-  
-  /**
-   * Mutate DNA so many times according to mutation rate.
-   * @param dna
-   */
-  private void doMutate(DNA dna) {
-    
-    // TODO this method should not be deterministic in terms of number of mutation.  
-    int dnaLength = dna.size();
-    int nbMutations = (int)Math.ceil(dnaLength * this.mutationRate);
-    for (int i=0; i<nbMutations; i++) {
-      int mutationIndex = RANDOM.nextInt(dnaLength);
-      int newValue = RANDOM.nextInt(this.numberOfBases);
-      dna.set(mutationIndex, newValue);
-    }
   }
   
 }
