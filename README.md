@@ -52,7 +52,7 @@ output:
 
 generation 200, 1000, 2000, 5000, and 10000: 
 
-<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0000200-0,442849.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0001000-0,720204.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0002000-0,858271.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samplesfacemashup//gen-0005000-1,045960.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0010000-1,192829.png" width="130">
+<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0000200-0%2C442849.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0001000-0%2C720204.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0002000-0%2C858271.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samplesfacemashup//gen-0005000-1%2C045960.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0010000-1%2C192829.png" width="130">
 
 
 ## How to run ?  
