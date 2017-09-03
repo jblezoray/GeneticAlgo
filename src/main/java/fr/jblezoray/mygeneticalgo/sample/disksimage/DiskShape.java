@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.polygonimage;
+package fr.jblezoray.mygeneticalgo.sample.disksimage;
 
 public class DiskShape {
   

@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.polygonimage;
+package fr.jblezoray.mygeneticalgo.sample.disksimage;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,6 @@ public class DisksImageGenerator implements IPhenotype<DisksImage> {
   private final File statusDir;
   
   private long timestamp;
-  private int curLineLength = 0; 
   
   private static final int POPULATION_SIZE = 100;
   
@@ -49,27 +48,14 @@ public class DisksImageGenerator implements IPhenotype<DisksImage> {
 
   @Override
   public void notificationOfBestMatch(int generation, DisksImage disksImage) {
-//    // clear current line. 
-//    StringBuilder builder = new StringBuilder();
-//    for (int i=0; i<curLineLength; i++) builder.append('\b');
-//    System.out.print(builder.toString());
-    
     // print new status line.
     long curtime = System.currentTimeMillis();
     long timediff = curtime - timestamp;
     this.timestamp = curtime;
     String statusLine = String.format("generation %7d : fitness %3.5f : time %7dms",
         generation, disksImage.getFitness(), timediff);
-//    curLineLength = statusLine.length();
-//    System.out.printf(statusLine);
-//    System.out.flush();
     System.out.println(statusLine);
-    
-    // keep current status line, generate an image, and move to the next line. 
-    if (generation % 200 == 0) {
-//      System.out.println();
-//      System.out.flush();  
-//      curLineLength = 0;
+    if (generation == 1 || generation % 200 == 0) {
       String filename = String.format("gen-%07d-%f.png", generation, 
           disksImage.getFitness());
       try {

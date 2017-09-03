@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.polygonimage;
+package fr.jblezoray.mygeneticalgo.sample.disksimage;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

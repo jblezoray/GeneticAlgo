@@ -7,7 +7,7 @@ See his [Generic Algorithm Montage](https://github.com/Murgio/Genetic-Algorithm-
 
 ## What does it do ? 
 
-Package `fr.jblezoray.mygeneticalgo` contains an implementation of a generic algorithm.  Then, there are sample applications of the genetic algorithm in packages `fr.jblezoray.mygeneticalgo.samples.helloworld` and `fr.jblezoray.mygeneticalgo.samples.facemashup`.
+Package `fr.jblezoray.mygeneticalgo` contains an implementation of a generic algorithm.  Then, there are sample applications of the genetic algorithm in packages `fr.jblezoray.mygeneticalgo.samples.helloworld`, `fr.jblezoray.mygeneticalgo.samples.facemashup`, and `fr.jblezoray.mygeneticalgo.sample.disksimage`.
 
 ### sample #1: Hello world 
 
@@ -33,11 +33,26 @@ Generates a face by combinating instances of itself.
 
 input:
 
-<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/match.png" width="130">
+<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/match.png" width="130">
 
 generation 1, 100, 500, 1000, and 2000: 
 
-<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/generation_0000001.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/generation_0000100.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/generation_0000500.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/generation_0001000.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/generation_0002000.png" width="130">
+<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0000001.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0000100.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0000500.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samplesfacemashup//generation_0001000.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0002000.png" width="130">
+
+
+### sample #3: Generates an images composed of disks
+
+This sample generates an Generates an approximation of an image by composing arbitrary disks. 
+
+input: 
+  
+<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/disksimage/monalisa_croped.png" width="130">
+
+output: 
+
+generation 200, 1000, 2000, 5000, and 10000: 
+
+<img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0000200-0,442849.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0001000-0,720204.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0002000-0,858271.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samplesfacemashup//gen-0005000-1,045960.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/gen-0010000-1,192829.png" width="130">
 
 
 ## How to run ?  
@@ -54,13 +69,18 @@ Run sample #1 (helloworld) :
 $ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.helloworld.Main
 ``` 
 
-Run sample #2 (helloworld) : 
+Run sample #2 (facemashup) : 
 ```
 $ mkdir statusDir
-$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.facemashup.Main samples/match.png samples/mask.png statusDir
+$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.facemashup.Main samples/facemashup/match.png samples/facemashup/mask.png statusDir
 ```
 The `statusDir` contains intermediate results. 
 
+Run sample #2 (disksimage) :
+```
+$ mkdir statusDir
+$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.disksimage.Main samples/disksimage/monalisa_croped.png statusDir
+```
 
 
 Have fun !
