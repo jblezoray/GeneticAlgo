@@ -9,6 +9,7 @@ See his [Generic Algorithm Montage](https://github.com/Murgio/Genetic-Algorithm-
 
 Package `fr.jblezoray.mygeneticalgo` contains an implementation of a generic algorithm.  Then, there are sample applications of the genetic algorithm in packages `fr.jblezoray.mygeneticalgo.samples.helloworld`, `fr.jblezoray.mygeneticalgo.samples.facemashup`, and `fr.jblezoray.mygeneticalgo.sample.disksimage`.
 
+
 ### sample #1: Hello world 
 
 Generates an "hello world" :
@@ -39,6 +40,7 @@ generation 1, 100, 500, 1000, and 2000:
 
 <img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0000001.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0000100.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0000500.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samplesfacemashup//generation_0001000.png" width="130"><img src="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/facemashup/generation_0002000.png" width="130">
 
+I've tried to optimize the comparison of the generated image with the original one (the fitness evaluation).  Here are a list of the algorithms I tried : <a href="https://raw.githubusercontent.com/jblezoray/GeneticAlgo/master/samples/eval_fitness.pdf>samples/eval_fitness.pdf</a> (in french !).
 
 ### sample #3: Generates an images composed of disks
 
