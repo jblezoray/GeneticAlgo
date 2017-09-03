@@ -3,29 +3,25 @@ package fr.jblezoray.mygeneticalgo.sample.imagefitness;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-/**
- * Image abstraction for the {@code FaceMashupGenerator}.
- * 
- * @author jib
- */
-public class FitableImage {
+import fr.jblezoray.mygeneticalgo.DNAAbstract;
 
-  private final BufferedImage image;
+public class UnmodifiableFitableImage extends AbstractFitableImage {
 
-  public FitableImage(File f, boolean hasAlpha) throws IOException {
+  private BufferedImage image = null;
+
+  public UnmodifiableFitableImage(File f, boolean hasAlpha) throws IOException {
     this(ImageIO.read(f), hasAlpha);
   }
 
-  
-  public FitableImage(BufferedImage source, boolean hasAlpha) {
-    
+  public UnmodifiableFitableImage(BufferedImage source, boolean hasAlpha) {
     int type = hasAlpha ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_3BYTE_BGR;
-    
     if (source.getType() == type) {
       this.image = source;
+      
     } else {
       int srcW = source.getWidth();
       int srcH = source.getHeight();
@@ -36,8 +32,7 @@ public class FitableImage {
     }
   }
   
-  
-  public FitableImage(byte[] bgr, int width, int height) {
+  public UnmodifiableFitableImage(byte[] bgr, int width, int height) {
     BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
@@ -53,13 +48,26 @@ public class FitableImage {
     this.image = img;
   }
 
-
-  public BufferedImage getImage() {
+  @Override
+  protected BufferedImage buildImage() {
     return this.image;
   }
-  
-  public void writeToFile(File dest) throws IOException {
-    ImageIO.write(image, "png", dest);
+
+  @Override
+  public void doMutate(Random rand, float mutationRate) {
+    throw new UnsupportedOperationException();
   }
 
+  @Override
+  public void doDNACrossover(Random rand, DNAAbstract other, int minCrossovers,
+      int maxCrossovers) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public <DNA extends DNAAbstract> DNA copy() {
+    // yes, it can be implemented.  But it is not necessary.
+    throw new UnsupportedOperationException();
+  }
+  
 }

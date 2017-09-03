@@ -8,8 +8,8 @@ public interface IFitness {
    * @param candidateToEvaluate
    * @return an evaluation note in range [0.0f, 1.0f] 
    */
-  public double computeFitnessOf(FitableImage candidateToEvaluate);
+  public double computeFitnessOf(AbstractFitableImage candidateToEvaluate);
   
-  public void init(FitableImage reference);
+  public void init(AbstractFitableImage reference);
   
 }

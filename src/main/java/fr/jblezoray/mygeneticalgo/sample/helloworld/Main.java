@@ -1,5 +1,6 @@
 package fr.jblezoray.mygeneticalgo.sample.helloworld;
 
+import fr.jblezoray.mygeneticalgo.DNAInteger;
 import fr.jblezoray.mygeneticalgo.GeneticAlgo;
 
 public class Main {
@@ -13,13 +14,7 @@ public class Main {
   
   public static void main(String[] args) {
     HelloWorldGenerator hwg = new HelloWorldGenerator(EXPECTED_RESULT, BASES);
-    GeneticAlgo ga = new GeneticAlgo(100, EXPECTED_RESULT.length(), 
-        BASES.length, hwg);
-    
-    // Reducing the mutation rate after some time enables a faster convergence. 
-    ga.setMutationRate(0.0001f);
-    ga.evolve(300);
-    ga.setMutationRate(0.000001f);
-    ga.evolve(300);
+    GeneticAlgo<DNAInteger> ga = new GeneticAlgo<>(hwg);
+    ga.evolve(1000);
   }
 }

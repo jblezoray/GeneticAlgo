@@ -1,11 +1,22 @@
 package fr.jblezoray.mygeneticalgo;
 
+import java.util.Collection;
+import java.util.Random;
+
 /**
  * The classes that use the {@GeneticAlgo} must implement this interface. 
  * @author jib
  */
-public interface IPhenotype {
+public interface IPhenotype<DNA extends DNAAbstract> {
 
+  /**
+   * Create an initial population, size > 1.
+   * 
+   * @param rand an initialized Random object.
+   * @return a population.
+   */
+  Collection<DNA> createInitialPopulation(Random rand);
+  
   /**
    * Evaluate a the fitness of this DNA.
    *  
@@ -20,6 +31,6 @@ public interface IPhenotype {
    * @param generation the generation number.
    * @param dna
    */
-  public void notificationOfBestMatch(int generation, DNA dna);
+  void notificationOfBestMatch(int generation, DNA dna);
   
 }
