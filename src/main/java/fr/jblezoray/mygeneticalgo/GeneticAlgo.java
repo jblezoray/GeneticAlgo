@@ -1,62 +1,54 @@
 package fr.jblezoray.mygeneticalgo;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
 
-public class GeneticAlgo<DNA extends DNAAbstract> {
+import fr.jblezoray.mygeneticalgo.ISelection.MatingPair;
+import fr.jblezoray.mygeneticalgo.dna.DNAFitnessComparator;
+import fr.jblezoray.mygeneticalgo.dna.IDNA;
 
-  private static final Random RANDOM = new Random(System.currentTimeMillis());
+public class GeneticAlgo<X extends IDNA> {
 
-  private static final double DEFAULT_TOURNAMENT_FRACTION = 0.6f;
+
   private static final float DEFAULT_MUTATION_RATE = 0.005f;
   private static final int DEFAULT_MIN_CROSSOVER = 1;
   private static final int DEFAULT_MAX_CROSSOVER = 3;
   
-  private final IPhenotype<DNA> phenotype;
+  private final IFitness<X> fitness;
+  private final ISelection<X> selection;
   
   private int generationCounter = 0;
-  private int tournamentSize;
-  private List<DNA> population;
+  private List<X> population;
   
   private int minCrossovers;
   private int maxCrossovers;
   private float mutationRate;
+  private List<IGeneticAlgoListener<X>> listeners = new ArrayList<>();
 
-  private final static Comparator<DNAAbstract> BETTER_FITNESS_FIRST = 
-      new Comparator<DNAAbstract>() {
-        @Override
-        public int compare(DNAAbstract i1, DNAAbstract i2) {
-          return (i1==null || i2 == null) ? 0
-              : - Double.compare(i1.getFitness(), i2.getFitness());
-        }
-      };
-  
   
   /**
    * Create a new Genetic algorithm with an initial population.
-   * @param phenotype
+   * 
+   * @param fitness    the fitness method. 
+   * @param dnaFactory a factory to generate random individuals.  
+   * @param selection  a method to select parents to breed.
+   * @param populationSize
    */
-  public GeneticAlgo(IPhenotype<DNA> phenotype) {
-    Collection<DNA> population = phenotype.createInitialPopulation(RANDOM);
-    if (population.size() < 2)
+  public GeneticAlgo(IFitness<X> fitness, IDNAFactory<X> dnaFactory, 
+      ISelection<X> selection, int populationSize) {
+    if (populationSize < 2)
       throw new RuntimeException("population size must be >= 2");
-    this.population = new ArrayList<DNA>(population.size());
-    this.population.addAll(population);
-    this.phenotype = phenotype;
-    this.setTournamentFraction(DEFAULT_TOURNAMENT_FRACTION);
+    this.population = new ArrayList<>();
+    for (int i=0; i<populationSize; i++)
+      this.population.add(dnaFactory.createRandomIndividual());
+    this.fitness = fitness;
+    this.selection = selection;
     this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
     this.setMutationRate(DEFAULT_MUTATION_RATE);
   }
   
-  /**
-   * 
-   * @param tournamentFraction
-   */
-  public void setTournamentFraction(double tournamentFraction) {
-    this.tournamentSize = (int) Math.ceil(this.population.size() * tournamentFraction);
+  public void addListener(IGeneticAlgoListener<X> listener) {
+    this.listeners.add(listener);
   }
 
   /**
@@ -88,8 +80,8 @@ public class GeneticAlgo<DNA extends DNAAbstract> {
    * @return
    *    current population, ordered with best fitness first.
    */
-  public List<DNA> getPopulation() {
-    this.population.sort(BETTER_FITNESS_FIRST);
+  public List<X> getPopulation() {
+    this.population.sort(new DNAFitnessComparator<X>());
     return this.population;
   }
   
@@ -112,78 +104,45 @@ public class GeneticAlgo<DNA extends DNAAbstract> {
   public void evolve() {
     // compute fitness
     this.population.parallelStream().forEach(dna -> {
-      double fitness = this.phenotype.computeFitness(dna);
+      double fitness = this.fitness.computeFitnessOf(dna);
       dna.setFitness(fitness);
     });
     
-    // notification for the best result in this generation
-    this.population.sort(BETTER_FITNESS_FIRST);
-    DNA bestOne = this.population.get(0);
-    phenotype.notificationOfBestMatch(++this.generationCounter, bestOne);
+    // notification for the results for this generation
+    this.generationCounter++;
+    this.population.sort(new DNAFitnessComparator<X>());
+    X bestOne = this.population.get(0);
+    double[] fitnessScores = this.population.stream()
+        .mapToDouble(indiv -> indiv.getFitness())
+        .toArray();
+    this.listeners.forEach(listener -> {
+      listener.notificationOfGeneration(this.generationCounter, bestOne, fitnessScores);
+    });
     
     // create a new population.
-    List<DNA> newPopulation = new ArrayList<>(this.population.size());
+    List<X> newPopulation = new ArrayList<>(this.population.size());
     int i=0;
+    this.selection.initialize(this.population);
     while (i+2<=this.population.size()) {
       i+=2;
       // select 2 parents
-      MatingPair parentsPair = tournamentSelection();
+      MatingPair<X> parentsPair = this.selection.selectMatingPair();
       
       // copy the DNA of the parents  
-      MatingPair childPair = new MatingPair();
+      MatingPair<X> childPair = new MatingPair<>();
       childPair.mate1 = parentsPair.mate1.copy();
       childPair.mate2 = parentsPair.mate2.copy();
       
       // crossover and mutate the two children. 
-      childPair.mate1.doDNACrossover(RANDOM, childPair.mate2, this.minCrossovers, this.maxCrossovers);
-      childPair.mate1.doMutate(RANDOM, this.mutationRate);
-      childPair.mate2.doMutate(RANDOM, this.mutationRate);
+      childPair.mate1.doDNACrossover(childPair.mate2, this.minCrossovers, this.maxCrossovers);
+      childPair.mate1.doMutate(this.mutationRate);
+      childPair.mate2.doMutate(this.mutationRate);
       
       // add to the new population.
       newPopulation.add(childPair.mate1);
       newPopulation.add(childPair.mate2);
     }
     this.population = newPopulation;
-  }
-
-  
-  private class MatingPair {
-    DNA mate1;
-    DNA mate2;
-  }
-
-  
-  /**
-   * Selects two individuals to mate using tournament selection.
-   * 
-   * This type of selection grabs the best two from a random subset of the 
-   * population.
-   * 
-   * TODO this method could be externalize and abstracted to allow using other
-   * types of selections. 
-   * 
-   * @see https://en.wikipedia.org/wiki/Tournament_selection
-   * @return
-   */
-  private MatingPair tournamentSelection() {
-    // Choose 'tournamentSize' elements randomly from the population.
-    List<DNA> chosenOnes = new ArrayList<>(this.tournamentSize);
-    List<DNA> populationCopy = new ArrayList<>(this.population);
-    for (int i=0; i<this.tournamentSize; i++) {
-      int randomIndex = RANDOM.nextInt(populationCopy.size());
-      DNA chosenOne = populationCopy.get(randomIndex);
-      populationCopy.remove(chosenOne);
-      chosenOnes.add(chosenOne);
-    }
-    
-    // Select the two best fit individuals from tournament
-    // (size is always >2 at this moment).
-    chosenOnes.sort(BETTER_FITNESS_FIRST);
-    MatingPair matingPair = new MatingPair(); 
-    matingPair.mate1 = chosenOnes.get(0);
-    matingPair.mate2 = chosenOnes.get(1);
-    
-    return matingPair;
   }
   
 }

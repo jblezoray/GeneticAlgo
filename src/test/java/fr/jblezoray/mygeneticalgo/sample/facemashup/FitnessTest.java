@@ -2,98 +2,72 @@ package fr.jblezoray.mygeneticalgo.sample.facemashup;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.AbstractFitableImage;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMS;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramRMSWithWeight;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessHistogramWithPatch;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.FitnessPatch;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.IFitness;
-import fr.jblezoray.mygeneticalgo.sample.imagefitness.UnmodifiableFitableImage;
+import fr.jblezoray.mygeneticalgo.IFitness;
+import fr.jblezoray.mygeneticalgo.dna.image.AbstractImageDNA;
+import fr.jblezoray.mygeneticalgo.dna.image.FitnessHistogramRMS;
+import fr.jblezoray.mygeneticalgo.dna.image.FitnessHistogramRMSWithWeight;
+import fr.jblezoray.mygeneticalgo.dna.image.FitnessHistogramWithPatch;
+import fr.jblezoray.mygeneticalgo.dna.image.FitnessPatch;
+import fr.jblezoray.mygeneticalgo.dna.image.UnmodifiableImageDNA;
 
 public class FitnessTest {
   
   
   @Test
   public void testComputeFitnessOf_FitnessHistogramRMSFast() throws IOException {
-    AbstractFitableImage matchImage = new UnmodifiableFitableImage(
+    AbstractImageDNA matchImage = new UnmodifiableImageDNA(
         ImageIO.read(this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness frms = new FitnessHistogramRMS();
-    frms.init(matchImage);
+    IFitness<AbstractImageDNA> frms = new FitnessHistogramRMS<>(matchImage);
     computeFitnessWith(frms);
   }
   
   
   @Test
   public void testComputeFitnessOf_FitnessPatchBased() throws IOException {
-    AbstractFitableImage matchImage = new UnmodifiableFitableImage(
+    AbstractImageDNA matchImage = new UnmodifiableImageDNA(
         ImageIO.read(this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness fpb = new FitnessHistogramWithPatch(10);
-    fpb.init(matchImage);
+    IFitness<AbstractImageDNA> fpb = new FitnessHistogramWithPatch<>(10, matchImage);
     computeFitnessWith(fpb);
   }
   
   
   @Test
   public void testComputeFitnessOf_FitnessPatchNoHistogram() throws IOException {
-    AbstractFitableImage matchImage = new UnmodifiableFitableImage(
+    AbstractImageDNA matchImage = new UnmodifiableImageDNA(
         ImageIO.read(this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness fpb = new FitnessPatch(10);
-    fpb.init(matchImage);
+    IFitness<AbstractImageDNA> fpb = new FitnessPatch<>(10, matchImage);
     computeFitnessWith(fpb);
   }
   
   
   @Test
   public void testComputeFitnessOf_FitnessHistogramRMSWithWeight() throws IOException {
-    AbstractFitableImage matchImage = new UnmodifiableFitableImage(
+    AbstractImageDNA matchImage = new UnmodifiableImageDNA(
         ImageIO.read(this.getClass().getResourceAsStream("/match.png")), false);
-    IFitness fpb = new FitnessHistogramRMSWithWeight();
-    fpb.init(matchImage);
+    IFitness<AbstractImageDNA> fpb = new FitnessHistogramRMSWithWeight<>(matchImage);
     computeFitnessWith(fpb);
   }
   
-
-  @Test
-  @Ignore("Errr this is not a unit test")
-  public void FitnessHistogramRMSWithWeight_dumpWeight() throws IOException {
-    AbstractFitableImage matchImage = new UnmodifiableFitableImage(
-        ImageIO.read(this.getClass().getResourceAsStream("/match.png")), false);
-    
-    FitnessHistogramRMSWithWeight fitness = new FitnessHistogramRMSWithWeight();
-    fitness.init(matchImage);
-    float[] weight = fitness.initWeight();
-    byte[] visualisable = new byte[weight.length]; 
-    for (int i=0; i<weight.length; i++) {
-      float w =  weight[i];
-      visualisable[i] = (byte)((int)(w * 0xFF) + Byte.MIN_VALUE);
-    }
-
-    int w = matchImage.getImage().getWidth();
-    int h = matchImage.getImage().getHeight(); 
-    new UnmodifiableFitableImage(visualisable, w, h).writeToFile(new File("output.png"));
-  }
   
   
   
-  private static void computeFitnessWith(IFitness frms) throws IOException {
+  private static void computeFitnessWith(IFitness<AbstractImageDNA> frms) throws IOException {
     // having
-    AbstractFitableImage gen0001 = new UnmodifiableFitableImage(ImageIO.read(
+    AbstractImageDNA gen0001 = new UnmodifiableImageDNA(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0000001.png")), false);
-    AbstractFitableImage gen0100 = new UnmodifiableFitableImage(ImageIO.read(
+    AbstractImageDNA gen0100 = new UnmodifiableImageDNA(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0000100.png")), false);
-    AbstractFitableImage gen0500 = new UnmodifiableFitableImage(ImageIO.read(
+    AbstractImageDNA gen0500 = new UnmodifiableImageDNA(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0000500.png")), false);
-    AbstractFitableImage gen1000 = new UnmodifiableFitableImage(ImageIO.read(
+    AbstractImageDNA gen1000 = new UnmodifiableImageDNA(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0001000.png")), false);
-    AbstractFitableImage gen2000 = new UnmodifiableFitableImage(ImageIO.read(
+    AbstractImageDNA gen2000 = new UnmodifiableImageDNA(ImageIO.read(
         FitnessTest.class.getResourceAsStream("/generation_0002000.png")), false);
     
     // when 

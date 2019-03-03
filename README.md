@@ -7,7 +7,7 @@ See his [Generic Algorithm Montage](https://github.com/Murgio/Genetic-Algorithm-
 
 ## What does it do ? 
 
-Package `fr.jblezoray.mygeneticalgo` contains an implementation of a generic algorithm.  Then, there are sample applications of the genetic algorithm in packages `fr.jblezoray.mygeneticalgo.samples.helloworld`, `fr.jblezoray.mygeneticalgo.samples.facemashup`, and `fr.jblezoray.mygeneticalgo.sample.disksimage`.
+Package `fr.jblezoray.mygeneticalgo` contains an implementation of a generic algorithm.  Then, there are sample applications of the genetic algorithm in packages `fr.jblezoray.mygeneticalgosample.*`.
 
 
 ### sample #1: Hello world 
@@ -68,20 +68,20 @@ $ mvn package
 
 Run sample #1 (helloworld) : 
 ```
-$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.helloworld.Main
+$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgosample.helloworld.Main
 ``` 
 
 Run sample #2 (facemashup) : 
 ```
 $ mkdir statusDir
-$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.facemashup.Main samples/facemashup/match.png samples/facemashup/mask.png statusDir
+$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgosample.facemashup.Main samples/facemashup/match.png samples/facemashup/mask.png statusDir
 ```
 The `statusDir` contains intermediate results. 
 
 Run sample #2 (disksimage) :
 ```
 $ mkdir statusDir
-$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgo.sample.disksimage.Main samples/disksimage/monalisa_croped.png statusDir
+$ java -cp target/myGeneticAlgo-0.0.1-SNAPSHOT.jar fr.jblezoray.mygeneticalgosample.disksimage.Main samples/disksimage/monalisa_croped.png statusDir
 ```
 
 
