@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.facemashup;
+package fr.jblezoray.mygeneticalgo.dna.image;
 
 import static org.junit.Assert.assertTrue;
 
