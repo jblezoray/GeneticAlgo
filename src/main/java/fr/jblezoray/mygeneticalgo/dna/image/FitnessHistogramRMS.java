@@ -34,8 +34,9 @@ implements IFitness<X> {
     
     double sumSquaredValues = 0;
     for (int n=0; n<histogram.length; n++)
-      sumSquaredValues += n * n * histogram[n];
-    double rms = Math.sqrt(sumSquaredValues / (this.image.getWidth() * this.image.getHeight()));
+      sumSquaredValues += (double)n * (double)n * (double)histogram[n];
+    double a = sumSquaredValues / (this.image.getWidth() * this.image.getHeight());
+    double rms = Math.sqrt(a);
     return 100 / rms;
   }
   

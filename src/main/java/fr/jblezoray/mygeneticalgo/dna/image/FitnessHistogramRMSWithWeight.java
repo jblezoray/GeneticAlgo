@@ -2,7 +2,6 @@ package fr.jblezoray.mygeneticalgo.dna.image;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -24,13 +23,16 @@ implements IFitness<X> {
   private final BufferedImage image;
   private final float[] weigth;
 
-  
-  public FitnessHistogramRMSWithWeight(AbstractImageDNA original){
+  public FitnessHistogramRMSWithWeight(AbstractImageDNA original, int patchSize){
     this.image = original.getImage();
     if (this.image.getType() != BufferedImage.TYPE_3BYTE_BGR)
       throw new RuntimeException("invalid image type : " + this.image.getType());
-    this.patchSize = this.image.getWidth() / 20; 
+    this.patchSize = patchSize;
     this.weigth = initWeight(this.image, this.patchSize);
+  }
+  
+  public FitnessHistogramRMSWithWeight(AbstractImageDNA original){
+    this(original, original.getImage().getWidth() / 20);
   }
 
   
@@ -57,7 +59,7 @@ implements IFitness<X> {
 
     float[] weigth = new float[pixelsThis.length];
     Arrays.fill(weigth, MIN_WEIGHT);
-    // don't start at 0 nor end at h or w, other wise the patch do overlap the 
+    // don't start at 0 nor end at h or w, otherwise the patch do overlap the 
     // border of the image.
     for (int y=halfPatchSize; y<h-halfPatchSize; y++) {
       for (int x=halfPatchSize; x<w-halfPatchSize; x++) {
@@ -112,7 +114,7 @@ implements IFitness<X> {
     
     double sumSquaredValues = 0;
     for (int n=0; n<histogram.length; n++)
-      sumSquaredValues += n * n * histogram[n];
+      sumSquaredValues += (double)n * (double)n * (double)histogram[n];
     double rms = Math.sqrt(sumSquaredValues / 
         (this.image.getWidth() * this.image.getHeight()));
     return 100 / rms;
@@ -122,13 +124,13 @@ implements IFitness<X> {
   public AbstractImageDNA getWeightAsImage() {
     byte[] bgr = new byte[this.weigth.length];
     for (int i=0; i<this.weigth.length; i++) {
-      int byteAsInt = (int)(this.weigth[i] * 256.0f);
+      int byteAsInt = (int)(this.weigth[i] * (256.0f - Byte.MIN_VALUE) + Byte.MIN_VALUE);
       bgr[i] = (byte)byteAsInt;
     }
     return new UnmodifiableImageDNA(bgr, this.image.getWidth(), 
         this.image.getHeight());
   }
-  
+
   
   /**
    * Computes an histogram of the differences between this image and an other 
@@ -168,19 +170,5 @@ implements IFitness<X> {
     return rgbHistogram;
   }
 
-  
-
-  public UnmodifiableImageDNA dumpWeightImage() throws IOException {
-    byte[] visualisable = new byte[weigth.length]; 
-    for (int i=0; i<weigth.length; i++) {
-      float w =  weigth[i];
-      visualisable[i] = (byte)((int)(w * 0xFF) + Byte.MIN_VALUE);
-    }
-  
-    int w = image.getWidth();
-    int h = image.getHeight(); 
-    
-    return new UnmodifiableImageDNA(visualisable, w, h);
-  }
   
 }

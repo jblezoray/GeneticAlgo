@@ -11,8 +11,7 @@ import fr.jblezoray.mygeneticalgo.IFitness;
  * @author jib
  *
  */
-public class FitnessPatch<X extends AbstractImageDNA> 
-implements IFitness<X> {
+public class FitnessPatch<X extends AbstractImageDNA> implements IFitness<X> {
 
   private final BufferedImage image;
   private final int patchSize;
