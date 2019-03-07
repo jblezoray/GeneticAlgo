@@ -15,7 +15,7 @@ import fr.jblezoray.mygeneticalgo.dna.IDNA;
  *
  * @param <X>
  */
-public class FitnessPloterListener<X extends IDNA> implements IGeneticAlgoListener<X> {
+public class FitnessRepartitionTextPloterListener<X extends IDNA> implements IGeneticAlgoListener<X> {
   
   private final PrintStream stream;
   private final int nbIntervals;
@@ -29,7 +29,7 @@ public class FitnessPloterListener<X extends IDNA> implements IGeneticAlgoListen
   private int[] valuesPerInterval;
   private int[] widthPerInterval;
   
-  public FitnessPloterListener(PrintStream stream, int nbIntervals, int printedWidth, int generationInterval) {
+  public FitnessRepartitionTextPloterListener(PrintStream stream, int nbIntervals, int printedWidth, int generationInterval) {
     this.stream = stream;
     this.nbIntervals = nbIntervals;
     this.printedWidth = printedWidth;

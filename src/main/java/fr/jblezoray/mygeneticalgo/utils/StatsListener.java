@@ -5,6 +5,15 @@ import java.io.PrintStream;
 import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
 import fr.jblezoray.mygeneticalgo.dna.IDNA;
 
+/**
+ * statistics about this generation. 
+ * 
+ * TODO min, max, std deviation
+ * 
+ * @author jbl
+ *
+ * @param <X>
+ */
 public class StatsListener<X extends IDNA> implements IGeneticAlgoListener<X> {
 
   private long timestamp;

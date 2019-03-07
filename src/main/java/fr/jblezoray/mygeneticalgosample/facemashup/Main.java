@@ -12,7 +12,8 @@ import fr.jblezoray.mygeneticalgo.dna.image.BasicAbstractImagePrinterListener;
 import fr.jblezoray.mygeneticalgo.dna.image.FitnessHistogramWithPatch;
 import fr.jblezoray.mygeneticalgo.dna.image.UnmodifiableImageDNA;
 import fr.jblezoray.mygeneticalgo.selection.BinaryTournamentSelection;
-import fr.jblezoray.mygeneticalgo.utils.FitnessPloterListener;
+import fr.jblezoray.mygeneticalgo.utils.FitnessHistoryGraphicalPloter;
+import fr.jblezoray.mygeneticalgo.utils.FitnessRepartitionTextPloterListener;
 import fr.jblezoray.mygeneticalgo.utils.StatsListener;
 
 public class Main {
@@ -42,8 +43,9 @@ public class Main {
     
     GeneticAlgo<FaceImageDNA> ga = new GeneticAlgo<>(fitness, factory, sel, POP_SIZE);
     ga.addListener(new BasicAbstractImagePrinterListener<>(dirStatus, LOG_INTERVAL));
-    ga.addListener(new FitnessPloterListener<>(System.out, 30, 80, LOG_INTERVAL));
+    ga.addListener(new FitnessRepartitionTextPloterListener<>(System.out, 30, 80, LOG_INTERVAL));
     ga.addListener(new StatsListener<>(System.out, LOG_INTERVAL));
+    ga.addListener(new FitnessHistoryGraphicalPloter<>());
     ga.evolve(2_000);
   }
 

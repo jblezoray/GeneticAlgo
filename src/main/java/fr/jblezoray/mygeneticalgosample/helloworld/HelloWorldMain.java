@@ -26,8 +26,6 @@ public class HelloWorldMain implements
     ga.setCrossoversRange(1, 5);
     ga.setMutationRate(0.005f);
     ga.addListener(hwg);
-//    ga.addListener(new ConsolePlotListener<>(System.out, 30, 80, LOG_INTERVAL));
-    
     ga.evolve(1_000);
   }
   
