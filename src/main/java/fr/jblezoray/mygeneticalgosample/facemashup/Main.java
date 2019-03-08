@@ -8,11 +8,11 @@ import fr.jblezoray.mygeneticalgo.IDNAFactory;
 import fr.jblezoray.mygeneticalgo.IFitness;
 import fr.jblezoray.mygeneticalgo.ISelection;
 import fr.jblezoray.mygeneticalgo.dna.image.AbstractImageDNA;
-import fr.jblezoray.mygeneticalgo.dna.image.BasicAbstractImagePrinterListener;
 import fr.jblezoray.mygeneticalgo.dna.image.FitnessHistogramWithPatch;
+import fr.jblezoray.mygeneticalgo.dna.image.ImageGraphicalPresentationListener;
+import fr.jblezoray.mygeneticalgo.dna.image.ImageSaverListener;
 import fr.jblezoray.mygeneticalgo.dna.image.UnmodifiableImageDNA;
 import fr.jblezoray.mygeneticalgo.selection.BinaryTournamentSelection;
-import fr.jblezoray.mygeneticalgo.utils.FitnessHistoryGraphicalPloter;
 import fr.jblezoray.mygeneticalgo.utils.FitnessRepartitionTextPloterListener;
 import fr.jblezoray.mygeneticalgo.utils.StatsListener;
 
@@ -42,10 +42,11 @@ public class Main {
     IDNAFactory<FaceImageDNA> factory = new FaceImageDNAFactory(faceMaskImage, NB_FACES_PER_IMAGE);
     
     GeneticAlgo<FaceImageDNA> ga = new GeneticAlgo<>(fitness, factory, sel, POP_SIZE);
-    ga.addListener(new BasicAbstractImagePrinterListener<>(dirStatus, LOG_INTERVAL));
-    ga.addListener(new FitnessRepartitionTextPloterListener<>(System.out, 30, 80, LOG_INTERVAL));
+    ga.addListener(new ImageSaverListener<>(dirStatus, LOG_INTERVAL));
     ga.addListener(new StatsListener<>(System.out, LOG_INTERVAL));
-    ga.addListener(new FitnessHistoryGraphicalPloter<>());
+    ga.addListener(new FitnessRepartitionTextPloterListener<>(System.out, 30, 80, LOG_INTERVAL));
+//    ga.addListener(new FitnessHistoryGraphicalPloter<>());
+    ga.addListener(new ImageGraphicalPresentationListener<>(referenceImage));
     ga.evolve(2_000);
   }
 

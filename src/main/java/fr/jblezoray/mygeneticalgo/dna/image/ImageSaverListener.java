@@ -5,14 +5,14 @@ import java.io.IOException;
 
 import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
 
-public class BasicAbstractImagePrinterListener<X extends AbstractImageDNA> 
+public class ImageSaverListener<X extends AbstractImageDNA> 
 implements IGeneticAlgoListener<X> {
 
   private final File statusDir;
   private final int generationInterval;
   private final static String DUMP_IMAGE_PREFIX = "gen";
   
-  public BasicAbstractImagePrinterListener(File statusDir, int generationInterval) {
+  public ImageSaverListener(File statusDir, int generationInterval) {
     this.statusDir = statusDir;
     this.generationInterval = generationInterval;
   }

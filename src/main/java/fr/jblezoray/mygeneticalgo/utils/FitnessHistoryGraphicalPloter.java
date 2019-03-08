@@ -17,6 +17,7 @@ import java.util.stream.DoubleStream;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -43,7 +44,7 @@ implements IGeneticAlgoListener<X> {
   
   private JFrame frame = null;
   private JPanel graphicsPanel = new JPanel() {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -6704280332671333413L;
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -117,8 +118,8 @@ implements IGeneticAlgoListener<X> {
     frame = new JFrame("Fitness history");
     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     frame.getContentPane().setLayout(new BorderLayout());
-    frame.getContentPane().add(graphicsPanel, "Center");
-    frame.setSize(700, 600);
+    frame.getContentPane().add(graphicsPanel, BorderLayout.CENTER);
+    frame.setSize(500, 400);
     frame.setVisible(true);
   }
   
@@ -130,8 +131,14 @@ implements IGeneticAlgoListener<X> {
     mins.add(generation-1, DoubleStream.of(allFitnessScores).min().getAsDouble());
     maxs.add(generation-1, dnaBestMatch.getFitness());
 
-    if (generation >2)
-      this.graphicsPanel.update(this.graphicsPanel.getGraphics());
+    if (generation >2) {
+      SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+          graphicsPanel.update(graphicsPanel.getGraphics());
+        }
+      });
+    }
   }
 
 

@@ -7,7 +7,7 @@ import fr.jblezoray.mygeneticalgo.GeneticAlgo;
 import fr.jblezoray.mygeneticalgo.IFitness;
 import fr.jblezoray.mygeneticalgo.ISelection;
 import fr.jblezoray.mygeneticalgo.dna.image.AbstractImageDNA;
-import fr.jblezoray.mygeneticalgo.dna.image.BasicAbstractImagePrinterListener;
+import fr.jblezoray.mygeneticalgo.dna.image.ImageSaverListener;
 import fr.jblezoray.mygeneticalgo.dna.image.FitnessHistogramRMS;
 import fr.jblezoray.mygeneticalgo.dna.image.UnmodifiableImageDNA;
 import fr.jblezoray.mygeneticalgo.selection.BinaryTournamentSelection;
@@ -41,7 +41,7 @@ public class Main {
     ISelection<DiskImageDNA> sel = new BinaryTournamentSelection<>();
     
     GeneticAlgo<DiskImageDNA> ga = new GeneticAlgo<>(fit, fac, sel, POPULATION_SIZE);
-    ga.addListener(new BasicAbstractImagePrinterListener<>(dirStatus, LOG_INTERVAL));
+    ga.addListener(new ImageSaverListener<>(dirStatus, LOG_INTERVAL));
     ga.addListener(new StatsListener<>(System.out, LOG_INTERVAL));
     ga.evolve(2_000);
   }
