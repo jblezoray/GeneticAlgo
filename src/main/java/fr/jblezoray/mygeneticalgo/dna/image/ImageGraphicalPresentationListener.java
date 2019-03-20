@@ -18,7 +18,7 @@ public class ImageGraphicalPresentationListener<X extends AbstractImageDNA>
 implements IGeneticAlgoListener<X> {
 
   private JFrame frame = null;
-  private ImagePanel referenceImagePanel;
+  private ImagePanel[] referenceImagePanels;
   private ImagePanel generatedImagePanel;
 
   static {
@@ -30,24 +30,35 @@ implements IGeneticAlgoListener<X> {
     }
   }
   
-  public ImageGraphicalPresentationListener(AbstractImageDNA referenceImage) {
+  public ImageGraphicalPresentationListener(
+      AbstractImageDNA referenceImage, 
+      AbstractImageDNA... additionnalReferenceImages) {
     
+    referenceImagePanels = new ImagePanel[1+additionnalReferenceImages.length];
+
     BufferedImage referenceImageBI = referenceImage.buildImage();
+    referenceImagePanels[0] = new ImagePanel();
+    referenceImagePanels[0].setImage(referenceImageBI);
+    referenceImagePanels[0].setSize(referenceImageBI.getWidth(), referenceImageBI.getHeight());
     
-    referenceImagePanel = new ImagePanel();
-    referenceImagePanel.setImage(referenceImageBI);
-    referenceImagePanel.setSize(referenceImageBI.getWidth(), referenceImageBI.getHeight());
+    for (int i = 0; i<additionnalReferenceImages.length; i++) {
+      referenceImagePanels[i+1] = new ImagePanel();
+      referenceImagePanels[i+1].setImage(additionnalReferenceImages[i].buildImage());
+      referenceImagePanels[i+1].setSize(referenceImageBI.getWidth(), referenceImageBI.getHeight());
+    }
     
     generatedImagePanel = new ImagePanel();
     generatedImagePanel.setSize(referenceImageBI.getWidth(), referenceImageBI.getHeight());
 
     frame = new JFrame("Generated image VS reference image");
     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-    frame.getContentPane().setLayout(new GridLayout(1, 2));
+    frame.getContentPane().setLayout(new GridLayout(1, 1+referenceImagePanels.length));
     frame.getContentPane().add(generatedImagePanel);
-    frame.getContentPane().add(referenceImagePanel);
-    frame.getContentPane().setPreferredSize(
-        new Dimension(referenceImageBI.getWidth()*2, referenceImageBI.getHeight()));
+    for (ImagePanel imagePanel : referenceImagePanels)
+      frame.getContentPane().add(imagePanel);
+    frame.getContentPane().setPreferredSize(new Dimension(
+        referenceImageBI.getWidth()*(1+referenceImagePanels.length), 
+        referenceImageBI.getHeight()));
     frame.pack();
     frame.setResizable(false);
     frame.setVisible(true);
@@ -55,7 +66,8 @@ implements IGeneticAlgoListener<X> {
     SwingUtilities.invokeLater(new Runnable() {
       @Override
       public void run() {
-        referenceImagePanel.update(referenceImagePanel.getGraphics());
+        for (ImagePanel imagePanel : referenceImagePanels)
+          imagePanel.update(imagePanel.getGraphics());
       }
     });
   }
@@ -73,7 +85,7 @@ implements IGeneticAlgoListener<X> {
     
   }
   
-  private class ImagePanel extends JPanel {
+  private static class ImagePanel extends JPanel {
     private static final long serialVersionUID = 461553419890866956L;
     private BufferedImage image = null;
 
