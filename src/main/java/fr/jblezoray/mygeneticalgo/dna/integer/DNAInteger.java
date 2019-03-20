@@ -20,6 +20,8 @@ public class DNAInteger extends AbstractDNA {
   private final int minValue;
   private final int maxValue;
   
+  private final static Random rand = RandomSingleton.instance();
+  
   /**
    * Creates a DNA that contains a list of random integers.
    * @param dnaLength The created DNA will be of this size.
@@ -31,11 +33,8 @@ public class DNAInteger extends AbstractDNA {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.dnaList = new ArrayList<Integer>(dnaLength);
-    Random rand = RandomSingleton.instance();
-    for(int i=0; i<dnaLength; i++){
-      int value = rand.nextInt(maxValue - minValue) + minValue;
-      this.dnaList.add(value);
-    }
+    for(int i=0; i<dnaLength; i++)
+      this.dnaList.add(getRandomBase());
   }
 
   private DNAInteger(DNAInteger toCopy) {
@@ -45,6 +44,10 @@ public class DNAInteger extends AbstractDNA {
     this.dnaList.addAll(toCopy.dnaList);
   }
   
+  
+  private int getRandomBase() {
+    return rand.nextInt(maxValue - minValue) + minValue;
+  }
 
   @Override
   @SuppressWarnings("unchecked")
@@ -62,6 +65,10 @@ public class DNAInteger extends AbstractDNA {
 
   public List<Integer> getList() {
     return this.dnaList;
+  }
+  
+  public void addRandomElement() {
+    this.dnaList.add(getRandomBase());
   }
   
   @Override
