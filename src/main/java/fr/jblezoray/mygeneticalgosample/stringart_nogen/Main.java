@@ -12,27 +12,28 @@ import javax.imageio.ImageIO;
 public class Main {
 
   private static final int NUMBER_NAILS = 200;
-  private static final float LINE_THICKNESS = 0.5f;
+  private static final float LINE_THICKNESS = 1.0f;
   private static final int MIN_NAILS_DIFF = NUMBER_NAILS / 10;
   
-  private static List<Edge> ALL_POSSIBLE_EDGES = new ArrayList<>();
+  private static final List<Edge> ALL_POSSIBLE_EDGES = new ArrayList<>();
   
   
   public static void main(String[] args) throws IOException {
-    // load images
-//    BufferedImage refImgBI = ImageIO.read(new File("samples/stringart/match.png"));
-//    BufferedImage refImgBI = ImageIO.read(new File("samples/stringart/match_bck2.png"));
+    // load the referece image
     BufferedImage refImgBI = ImageIO.read(new File("samples/stringart/einstein.png"));
     Image refImg = new Image(refImgBI);
-//    Image importanceMappingImg = null;
-//    multiplyImportanceMapping(refImg, importanceMappingImg);
     refImg.writeToFile(new File("_refImg.png"));
     
-    // initialize ALL_POSSIBLE_EDGES
+    // load the features image 
+    BufferedImage featImgBI = ImageIO.read(new File("samples/stringart/einstein_features.png"));
+    Image importanceMappingImg =  new Image(featImgBI);
+    refImg.writeToFile(new File("_features.png"));
+    
+    // initialize an array with all the possible edges.
     int w = refImg.getW();
     int h = refImg.getH();
     for (int i=0; i<NUMBER_NAILS; i++) {
-      for (int j=0; j<NUMBER_NAILS; j++) {
+      for (int j=i; j<NUMBER_NAILS; j++) {
         if (Math.abs(i - j) > NUMBER_NAILS / MIN_NAILS_DIFF) {
           Edge edge = new Edge(i, j, w, h, NUMBER_NAILS, LINE_THICKNESS);
           ALL_POSSIBLE_EDGES.add(edge);
@@ -41,12 +42,13 @@ public class Main {
     }
     
     // edges of the image to build.
-    TargetEdges edges = TargetEdges.factory();
+    TargetEdges edges = new TargetEdges();
 
     // optimization algo
     double prevNorm = Float.MAX_VALUE;
     int prevPin = 0; 
     Image curImg = new Image(refImg.getW(), refImg.getH());
+    int iteration = 0;
     while (true) {
       long before = System.currentTimeMillis();
 
@@ -57,7 +59,8 @@ public class Main {
       ScoredEdge scoredEdge = ALL_POSSIBLE_EDGES.stream().parallel()
           // only edges that start where the previous one finishes ; skip edges 
           // that are already in the graph
-          .filter(edge -> edge.getPinA()==prevPinFinalCopy 
+          .filter(edge -> 
+              (edge.getPinA()==prevPinFinalCopy || edge.getPinB()==prevPinFinalCopy) 
               && !edges.getEdges().contains(edge))
           .peek(edge -> counter.incrementAndGet())
           // compute a resulting image, and score it. 
@@ -65,6 +68,7 @@ public class Main {
             Image targetImg = renderImage(refImg.getW(), refImg.getH(), 
                 curImgCpy.getBytes(), edge);
             Image diffImage = imageDiff(targetImg, refImg);
+            diffImage = multiplyImportanceMapping(diffImage, importanceMappingImg);
             double norm = l2norm(diffImage);
             return new ScoredEdge(edge, norm);
           })
@@ -76,7 +80,7 @@ public class Main {
       // of the norm. 
       // TODO 
 
-      // stop if we reached an optimal form the best result
+      // stop if we reached an optimal form (the best result)
       if (scoredEdge.getNorm()>prevNorm) {
         break;
       }
@@ -86,15 +90,19 @@ public class Main {
           scoredEdge.getEdge());
       edges.getEdges().add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
-      prevPin = scoredEdge.getEdge().getPinB();
+      prevPin = scoredEdge.getEdge().getPinA() == prevPin ? 
+          scoredEdge.getEdge().getPinB() : scoredEdge.getEdge().getPinA();
       
       // debug stuffs...
-      curImg.writeToFile(new File("_rendering.png"));
-      imageDiff(curImg, refImg).writeToFile(new File("_diff.png"));;
+      if (iteration++%10 == 0) {
+        curImg.writeToFile(new File("_rendering.png"));
+        multiplyImportanceMapping(imageDiff(curImg, refImg), importanceMappingImg)
+            .writeToFile(new File("_diff.png"));
+      }
       long rendered = System.currentTimeMillis();
       System.out.println(String.format(
           "iteration:%d ; norm:%7.0f ; pins:%3d,%3d ; choose:%5dms (mean:%d*%.3fms) ; drawing:%5dms)",
-          edges.getEdges().size(),
+          iteration,
           scoredEdge.getNorm(), 
           scoredEdge.getEdge().getPinA(), 
           scoredEdge.getEdge().getPinB(),
@@ -108,8 +116,6 @@ public class Main {
   }
 
 
-
-
   // TODO : upscaling (Ãx) + clamping C(Ãx) + downsampling to target size DC(Ãx)
   private static Image renderImage(int w, int h, TargetEdges edges, Edge... additionalEdges) {
     Image img = new Image(w, h);
@@ -117,6 +123,8 @@ public class Main {
     for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
     return img;
   }
+  
+  
   private static Image renderImage(int w, int h, byte[] canevas, Edge... additionalEdges) {
     Image img = new Image(w, h, canevas);
     for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
@@ -124,11 +132,35 @@ public class Main {
   }
 
   
+  /**
+   * Each pixel the importance image describes the influence of the 
+   * corresponding pixel in the reference image.  
+   * 
+   * A value of 0x00 implies that the pixel does not contributes to the 
+   * fitness. A value of OxFF corresponds to the maximum influence possible.
+   * Therefore, the brighter the zone are in the importanceMappingImage, the
+   * more they represent important features of the reference image.
+   * 
+   *   
+   *  
+   * @param referenceImage
+   * @param importanceMappingImage
+   * @return
+   */
   private static Image multiplyImportanceMapping(
-      Image referenceImage, 
+      Image diffImage, 
       Image importanceMappingImage) {
-    // TODO 
-    return null;
+
+    byte[] diffBytes = diffImage.getBytes();
+    byte[] importanceMappingBytes = importanceMappingImage.getBytes();
+    byte[] output = new byte[diffImage.getH()*diffImage.getW()];
+    
+    for (int i=0; i<output.length; i++) {
+      int diffPixel = Byte.toUnsignedInt(diffBytes[i]);
+      int importanceMappingPixel = Byte.toUnsignedInt(importanceMappingBytes[i]);
+      output[i] = (byte)(diffPixel * importanceMappingPixel / (float)0xFF);
+    }
+    return new Image(diffImage.getW(), diffImage.getH(), output);
   }
 
   

@@ -141,8 +141,17 @@ public class Edge {
     return bytes; 
   }
   
+  /**
+   * Take image 'img', and draw this edge in the image. 
+   * 
+   * When run on an edge for the first time, this method has an overhead due to 
+   * the initial computation of the image.  
+   * 
+   * @param img original image (will not be modified) 
+   * @return a copy of the original image, including the edge.   
+   */
   public Image drawEdgeInImage(Image img) {
-    // initialize compressDrawnEdgeData if needed. 
+    // lazily initialize compressDrawnEdgeData 
     if (compressedDrawnEdgeData==null) {
       synchronized(this) {
         if (compressedDrawnEdgeData==null) {

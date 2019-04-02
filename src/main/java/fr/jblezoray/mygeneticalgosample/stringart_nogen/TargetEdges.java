@@ -7,10 +7,6 @@ public class TargetEdges {
   
   private List<Edge> edges = new ArrayList<>();
   
-  public static TargetEdges factory() {
-    return new TargetEdges();
-  }
-  
   public List<Edge> getEdges() {
     return edges;
   }
