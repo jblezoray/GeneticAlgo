@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 
+import fr.jblezoray.mygeneticalgosample.stringart_nogen.Image.ImageSize;
+
 public class Main {
 
   private static final int NUMBER_NAILS = 200;
@@ -30,12 +32,11 @@ public class Main {
     importanceMappingImg.writeToFile(new File("_features.png"));
     
     // initialize an array with all the possible edges.
-    int w = refImg.getW();
-    int h = refImg.getH();
+    ImageSize size = refImg.getSize();
     for (int i=0; i<NUMBER_NAILS; i++) {
       for (int j=i; j<NUMBER_NAILS; j++) {
         if (Math.abs(i - j) > NUMBER_NAILS / MIN_NAILS_DIFF) {
-          Edge edge = new Edge(i, j, w, h, NUMBER_NAILS, LINE_THICKNESS);
+          Edge edge = new Edge(i, j, size, NUMBER_NAILS, LINE_THICKNESS);
           ALL_POSSIBLE_EDGES.add(edge);
         }
       }
@@ -47,7 +48,7 @@ public class Main {
     // optimization algo
     double prevNorm = Float.MAX_VALUE;
     int prevPin = 0; 
-    Image curImg = new Image(refImg.getW(), refImg.getH());
+    Image curImg = new Image(size);
     int iteration = 0;
     while (true) {
       long before = System.currentTimeMillis();
@@ -65,8 +66,7 @@ public class Main {
           .peek(edge -> counter.incrementAndGet())
           // compute a resulting image, and score it. 
           .map(edge -> {
-            Image targetImg = renderImage(refImg.getW(), refImg.getH(), 
-                curImgCpy.getBytes(), edge);
+            Image targetImg = renderImage(size, curImgCpy.getBytes(), edge);
             Image diffImage = imageDiff(targetImg, refImg);
             diffImage = multiplyImportanceMapping(diffImage, importanceMappingImg);
             double norm = l2norm(diffImage);
@@ -86,8 +86,7 @@ public class Main {
       }
 
       // save image !
-      curImg = renderImage(refImg.getW(), refImg.getH(), curImg.getBytes(), 
-          scoredEdge.getEdge());
+      curImg = renderImage(size, curImg.getBytes(), scoredEdge.getEdge());
       edges.getEdges().add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
       prevPin = scoredEdge.getEdge().getPinA() == prevPin ? 
@@ -116,17 +115,17 @@ public class Main {
   }
 
 
-  // TODO : upscaling (Ãx) + clamping C(Ãx) + downsampling to target size DC(Ãx)
-  private static Image renderImage(int w, int h, TargetEdges edges, Edge... additionalEdges) {
-    Image img = new Image(w, h);
-    for (Edge e : edges.getEdges()) img = e.drawEdgeInImage(img);
-    for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
-    return img;
-  }
+//  // TODO : upscaling (Ãx) + clamping C(Ãx) + downsampling to target size DC(Ãx)
+//  private static Image renderImage(ImageSize size, TargetEdges edges, Edge... additionalEdges) {
+//    Image img = new Image(size);
+//    for (Edge e : edges.getEdges()) img = e.drawEdgeInImage(img);
+//    for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
+//    return img;
+//  }
   
   
-  private static Image renderImage(int w, int h, byte[] canevas, Edge... additionalEdges) {
-    Image img = new Image(w, h, canevas);
+  private static Image renderImage(ImageSize size, byte[] canevas, Edge... additionalEdges) {
+    Image img = new Image(size, canevas);
     for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
     return img;
   }
@@ -148,17 +147,18 @@ public class Main {
   private static Image multiplyImportanceMapping(
       Image diffImage, 
       Image importanceMappingImage) {
-
+    ImageSize size = diffImage.getSize();
+    
     byte[] diffBytes = diffImage.getBytes();
     byte[] importanceMappingBytes = importanceMappingImage.getBytes();
-    byte[] output = new byte[diffImage.getH()*diffImage.getW()];
+    byte[] output = new byte[size.nbPixels];
     
     for (int i=0; i<output.length; i++) {
       int diffPixel = Byte.toUnsignedInt(diffBytes[i]);
       int importanceMappingPixel = Byte.toUnsignedInt(importanceMappingBytes[i]);
       output[i] = (byte)(diffPixel * importanceMappingPixel / (float)0xFF);
     }
-    return new Image(diffImage.getW(), diffImage.getH(), output);
+    return new Image(size, output);
   }
 
   
@@ -170,12 +170,13 @@ public class Main {
    * @return
    */
   private static Image imageDiff(Image target, Image ref) {
-    if (target.getH()!=ref.getH() || target.getW()!=ref.getW())
+    ImageSize size = target.getSize();
+    if (!size.equals(ref.getSize()))
       throw new RuntimeException("Images do not have the same size.");
 
     byte[] refBytes = ref.getBytes();
     byte[] targetBytes = target.getBytes();
-    byte[] diff = new byte[ref.getH()*ref.getW()];
+    byte[] diff = new byte[size.nbPixels];
     
     for (int i=0; i<diff.length; i++) {
       int refPixel = Byte.toUnsignedInt(refBytes[i]);
@@ -183,7 +184,7 @@ public class Main {
       // the darker, the better. 
       diff[i] = (byte) (Math.abs(refPixel - targetPixel)); 
     }
-    return new Image(target.getW(), target.getH(), diff);
+    return new Image(size, diff);
   }
   
 

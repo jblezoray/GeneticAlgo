@@ -8,23 +8,23 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
 
+import fr.jblezoray.mygeneticalgosample.stringart_nogen.Image.ImageSize;
+
 public class Edge {
   private final int pinA;
   private final int pinB;
-  private final int w;
-  private final int h;
+  private final ImageSize size;
   private final int totalNumberOfNails;
   private byte[] compressedDrawnEdgeData;
   private float lineThickness;
   
-  public Edge(int pinA, int pinB, int w, int h, int totalNumberOfNails, 
+  public Edge(int pinA, int pinB, ImageSize size, int totalNumberOfNails, 
       float lineThickness) {
     if (pinA == pinB) 
       throw new RuntimeException("cannot draw an edge if the two pins are identical");
     this.pinA = pinA;
     this.pinB = pinB;
-    this.w = w;
-    this.h = h;
+    this.size = size;
     this.totalNumberOfNails = totalNumberOfNails;
     this.lineThickness = lineThickness;
   }
@@ -48,14 +48,14 @@ public class Edge {
    */
   byte[] getDrawnEdge() {
     BufferedImage image = new BufferedImage(
-        this.w, this.h, BufferedImage.TYPE_BYTE_GRAY);
+        this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
     
     Graphics2D graphics2D = null;
     try {
       // create a new blank image. 
       graphics2D = image.createGraphics();
       graphics2D.setBackground(Color.WHITE);
-      graphics2D.clearRect(0, 0, this.w, this.h);
+      graphics2D.clearRect(0, 0, this.size.w, this.size.h);
       
       // draw line 
       graphics2D.setColor(Color.BLACK);
@@ -92,7 +92,7 @@ public class Edge {
    */
   private int xNail2Position(int nailIndex) {
     double sinX = Math.sin(nailIndex*2*Math.PI/this.totalNumberOfNails);
-    return (int)(sinX*(this.w/2) + (this.w/2));
+    return (int)(sinX*(this.size.w/2) + (this.size.w/2));
   }
 
 
@@ -103,7 +103,7 @@ public class Edge {
    */
   private int yNail2Position(int nailIndex) {
     double cosY = Math.cos(nailIndex*2*Math.PI/this.totalNumberOfNails);
-    return (int)(-cosY*(this.h/2) + (this.h/2));
+    return (int)(-cosY*(this.size.h/2) + (this.size.h/2));
   }
   
   
@@ -176,7 +176,7 @@ public class Edge {
       bytesIndex += howManyPixel;
     }
     
-    return new Image(this.w, this.h, bytes);
+    return new Image(this.size, bytes);
   }
   
   
