@@ -28,6 +28,7 @@
   </build>
 
   <dependencies>
+    <!-- Keeping dependencies as minimal as possible -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

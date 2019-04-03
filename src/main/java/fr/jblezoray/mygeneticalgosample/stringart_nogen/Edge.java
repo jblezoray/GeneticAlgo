@@ -167,9 +167,11 @@ public class Edge {
     for (int i=0; i<this.compressedDrawnEdgeData.length; i+=2) {
       int howManyPixel = Byte.toUnsignedInt(this.compressedDrawnEdgeData[i]);
       int pixel = Byte.toUnsignedInt(this.compressedDrawnEdgeData[i+1]);
-      for (int j=bytesIndex; j<bytesIndex+(howManyPixel); j++) {
-        int pixelImage = Byte.toUnsignedInt(bytes[j]);
-        bytes[j] = (byte)Math.max(0x00, pixelImage + pixel - 0xFF);
+      if (pixel!=0xFF) { // 0xFF is the identity transformation
+        for (int j=bytesIndex; j<bytesIndex+(howManyPixel); j++) {
+          int pixelImage = Byte.toUnsignedInt(bytes[j]);
+          bytes[j] = (byte)Math.max(0x00, pixelImage + pixel - 0xFF);
+        }
       }
       bytesIndex += howManyPixel;
     }

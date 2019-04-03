@@ -19,7 +19,7 @@ public class Main {
   
   
   public static void main(String[] args) throws IOException {
-    // load the referece image
+    // load the reference image
     BufferedImage refImgBI = ImageIO.read(new File("samples/stringart/einstein.png"));
     Image refImg = new Image(refImgBI);
     refImg.writeToFile(new File("_refImg.png"));
@@ -27,7 +27,7 @@ public class Main {
     // load the features image 
     BufferedImage featImgBI = ImageIO.read(new File("samples/stringart/einstein_features.png"));
     Image importanceMappingImg =  new Image(featImgBI);
-    refImg.writeToFile(new File("_features.png"));
+    importanceMappingImg.writeToFile(new File("_features.png"));
     
     // initialize an array with all the possible edges.
     int w = refImg.getW();
@@ -94,7 +94,7 @@ public class Main {
           scoredEdge.getEdge().getPinB() : scoredEdge.getEdge().getPinA();
       
       // debug stuffs...
-      if (iteration++%10 == 0) {
+      if (iteration++%50 == 0) {
         curImg.writeToFile(new File("_rendering.png"));
         multiplyImportanceMapping(imageDiff(curImg, refImg), importanceMappingImg)
             .writeToFile(new File("_diff.png"));
@@ -140,8 +140,6 @@ public class Main {
    * fitness. A value of OxFF corresponds to the maximum influence possible.
    * Therefore, the brighter the zone are in the importanceMappingImage, the
    * more they represent important features of the reference image.
-   * 
-   *   
    *  
    * @param referenceImage
    * @param importanceMappingImage
@@ -193,6 +191,11 @@ public class Main {
    * compute a L2-norm of the image.
    * 
    * A L2 norm is the square root of the sum of the squared elements.   
+   * 
+   * TODO compute a diff on a 3*3 patch around the considered pixel.  
+   * 
+   * For more information about Ln-norms, see this very good introduction : 
+   * https://rorasa.wordpress.com/2012/05/13/l0-norm-l1-norm-l2-norm-l-infinity-norm/
    * 
    * @param diffImage
    * @return
