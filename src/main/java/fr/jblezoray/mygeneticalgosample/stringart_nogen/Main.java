@@ -9,8 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 
-import fr.jblezoray.mygeneticalgosample.stringart_nogen.Image.ImageSize;
-
 public class Main {
 
   private static final int NUMBER_NAILS = 200;
@@ -18,17 +16,16 @@ public class Main {
   private static final int MIN_NAILS_DIFF = NUMBER_NAILS / 10;
   
   private static final List<Edge> ALL_POSSIBLE_EDGES = new ArrayList<>();
-  
-  
+
   public static void main(String[] args) throws IOException {
     // load the reference image
     BufferedImage refImgBI = ImageIO.read(new File("samples/stringart/einstein.png"));
-    Image refImg = new Image(refImgBI);
+    Image refImg = new ByteImage(refImgBI);
     refImg.writeToFile(new File("_refImg.png"));
     
     // load the features image 
     BufferedImage featImgBI = ImageIO.read(new File("samples/stringart/einstein_features.png"));
-    Image importanceMappingImg =  new Image(featImgBI);
+    Image importanceMappingImg =  new ByteImage(featImgBI);
     importanceMappingImg.writeToFile(new File("_features.png"));
     
     // initialize an array with all the possible edges.
@@ -48,7 +45,7 @@ public class Main {
     // optimization algo
     double prevNorm = Float.MAX_VALUE;
     int prevPin = 0; 
-    Image curImg = new Image(size);
+    UnboundedImage curImg = new UnboundedImage(size);
     int iteration = 0;
     while (true) {
       long before = System.currentTimeMillis();
@@ -56,7 +53,7 @@ public class Main {
       // search for the edge that contributes the most to the reduction of the norm.
       AtomicInteger counter = new AtomicInteger();
       final int prevPinFinalCopy = prevPin;
-      final Image curImgCpy = curImg;//.deepCopy();
+      final UnboundedImage curImgFinal = curImg;
       ScoredEdge scoredEdge = ALL_POSSIBLE_EDGES.stream().parallel()
           // only edges that start where the previous one finishes ; skip edges 
           // that are already in the graph
@@ -66,7 +63,7 @@ public class Main {
           .peek(edge -> counter.incrementAndGet())
           // compute a resulting image, and score it. 
           .map(edge -> {
-            Image targetImg = renderImage(size, curImgCpy.getBytes(), edge);
+            Image targetImg = renderImage(curImgFinal, edge);
             Image diffImage = imageDiff(targetImg, refImg);
             diffImage = multiplyImportanceMapping(diffImage, importanceMappingImg);
             double norm = l2norm(diffImage);
@@ -86,7 +83,7 @@ public class Main {
       }
 
       // save image !
-      curImg = renderImage(size, curImg.getBytes(), scoredEdge.getEdge());
+      curImg = renderImage(curImg, scoredEdge.getEdge());
       edges.getEdges().add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
       prevPin = scoredEdge.getEdge().getPinA() == prevPin ? 
@@ -115,19 +112,11 @@ public class Main {
   }
 
 
-//  // TODO : upscaling (Ãx) + clamping C(Ãx) + downsampling to target size DC(Ãx)
-//  private static Image renderImage(ImageSize size, TargetEdges edges, Edge... additionalEdges) {
-//    Image img = new Image(size);
-//    for (Edge e : edges.getEdges()) img = e.drawEdgeInImage(img);
-//    for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
-//    return img;
-//  }
-  
-  
-  private static Image renderImage(ImageSize size, byte[] canevas, Edge... additionalEdges) {
-    Image img = new Image(size, canevas);
-    for (Edge e : additionalEdges)  img = e.drawEdgeInImage(img);
-    return img;
+  // TODO : upscaling (Ãx) + clamping C(Ãx) + downsampling to target size DC(Ãx)
+  private static UnboundedImage renderImage(UnboundedImage canevas, Edge... additionalEdges) {
+    UnboundedImage copy = new UnboundedImage(canevas);
+    for (Edge e : additionalEdges)  copy = e.drawEdgeInImage(copy);
+    return copy;
   }
 
   
@@ -158,7 +147,7 @@ public class Main {
       int importanceMappingPixel = Byte.toUnsignedInt(importanceMappingBytes[i]);
       output[i] = (byte)(diffPixel * importanceMappingPixel / (float)0xFF);
     }
-    return new Image(size, output);
+    return new ByteImage(size, output);
   }
 
   
@@ -184,7 +173,7 @@ public class Main {
       // the darker, the better. 
       diff[i] = (byte) (Math.abs(refPixel - targetPixel)); 
     }
-    return new Image(size, diff);
+    return new ByteImage(size, diff);
   }
   
 

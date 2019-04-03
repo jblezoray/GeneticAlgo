@@ -8,8 +8,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
 
-import fr.jblezoray.mygeneticalgosample.stringart_nogen.Image.ImageSize;
-
 public class Edge {
   private final int pinA;
   private final int pinB;
@@ -141,6 +139,21 @@ public class Edge {
     return bytes; 
   }
   
+  
+  /**
+   * lazily initialize 'compressDrawnEdgeData'.
+   */
+  private void lazyInit() {
+    if (compressedDrawnEdgeData==null) {
+      synchronized(this) {
+        if (compressedDrawnEdgeData==null) {
+          byte[] drawnEdgeImage = getDrawnEdge();
+          this.compressedDrawnEdgeData = compressDrawnEdgeData(drawnEdgeImage);
+        }
+      }
+    }
+  }
+  
   /**
    * Take image 'img', and draw this edge in the image. 
    * 
@@ -150,33 +163,54 @@ public class Edge {
    * @param img original image (will not be modified) 
    * @return a copy of the original image, including the edge.   
    */
-  public Image drawEdgeInImage(Image img) {
-    // lazily initialize compressDrawnEdgeData 
-    if (compressedDrawnEdgeData==null) {
-      synchronized(this) {
-        if (compressedDrawnEdgeData==null) {
-          byte[] drawnEdgeImage = getDrawnEdge();
-          this.compressedDrawnEdgeData = compressDrawnEdgeData(drawnEdgeImage);
-        }
-      }
-    }
-    
-    // draw edge in image.
-    byte[] bytes = img.getBytes().clone();
+  public UnboundedImage drawEdgeInImage(UnboundedImage img) {
+    lazyInit();
+    UnboundedImage copy = new UnboundedImage(img);
+    int[] unboundedBytes = copy.getUnboundedBytes();
     int bytesIndex = 0;
     for (int i=0; i<this.compressedDrawnEdgeData.length; i+=2) {
+      
       int howManyPixel = Byte.toUnsignedInt(this.compressedDrawnEdgeData[i]);
       int pixel = Byte.toUnsignedInt(this.compressedDrawnEdgeData[i+1]);
-      if (pixel!=0xFF) { // 0xFF is the identity transformation
+      
+      // 0xFF is the identity transformation
+      if (pixel!=0xFF) {
         for (int j=bytesIndex; j<bytesIndex+(howManyPixel); j++) {
-          int pixelImage = Byte.toUnsignedInt(bytes[j]);
-          bytes[j] = (byte)Math.max(0x00, pixelImage + pixel - 0xFF);
+          unboundedBytes[j] += pixel - 0xFF;
         }
       }
       bytesIndex += howManyPixel;
     }
     
-    return new Image(this.size, bytes);
+    return copy;
+  }
+
+  /**
+   * Remove an edge from an image.
+   * 
+   * @param img
+   * @return a deep copy of img, with the edge removed.
+   */
+  public UnboundedImage undrawEdgeInImage(UnboundedImage img) {
+    lazyInit();
+    UnboundedImage copy = new UnboundedImage(img);
+    int[] unboundedBytes = copy.getUnboundedBytes();
+    int bytesIndex = 0;
+    for (int i=0; i<this.compressedDrawnEdgeData.length; i+=2) {
+      
+      int howManyPixel = Byte.toUnsignedInt(this.compressedDrawnEdgeData[i]);
+      int pixel = Byte.toUnsignedInt(this.compressedDrawnEdgeData[i+1]);
+      
+      // 0xFF is the identity transformation
+      if (pixel!=0xFF) {
+        for (int j=bytesIndex; j<bytesIndex+(howManyPixel); j++) {
+          unboundedBytes[j] -= pixel - 0xFF;
+        }
+      }
+      bytesIndex += howManyPixel;
+    }
+    
+    return copy;
   }
   
   
