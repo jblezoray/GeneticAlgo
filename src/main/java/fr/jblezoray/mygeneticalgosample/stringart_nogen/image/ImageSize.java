@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgosample.stringart_nogen;
+package fr.jblezoray.mygeneticalgosample.stringart_nogen.image;
 
 public class ImageSize {
   
@@ -6,7 +6,7 @@ public class ImageSize {
   public final int h;
   public final int nbPixels;
   
-  ImageSize(int w, int h) {
+  public ImageSize(int w, int h) {
     this.w = w;
     this.h = h;
     this.nbPixels = w*h;

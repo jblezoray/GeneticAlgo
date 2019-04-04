@@ -1,8 +1,12 @@
-package fr.jblezoray.mygeneticalgosample.stringart_nogen;
+package fr.jblezoray.mygeneticalgosample.stringart_nogen.image;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+
+import javax.imageio.ImageIO;
 
 public class ByteImage implements Image {
 
@@ -18,6 +22,14 @@ public class ByteImage implements Image {
   public ByteImage(ImageSize size, byte[] bytes) {
     this.size = size;
     this.bytes = bytes;
+  }
+
+  public ByteImage(String imagePath) throws IOException {
+    this(new File(imagePath));
+  }
+  
+  public ByteImage(File imageFile) throws IOException {
+    this(ImageIO.read(imageFile));
   }
   
   public ByteImage(BufferedImage image) {

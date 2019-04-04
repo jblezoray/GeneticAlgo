@@ -1,11 +1,12 @@
 package fr.jblezoray.mygeneticalgosample.stringart_nogen;
 
-class ScoredEdge  {
+import fr.jblezoray.mygeneticalgosample.stringart_nogen.edge.Edge;
+
+public class ScoredEdge  {
   private final Edge edge;
   private final double norm;
   
   public ScoredEdge(Edge edge, double norm) {
-    super();
     this.edge = edge;
     this.norm = norm;
   }

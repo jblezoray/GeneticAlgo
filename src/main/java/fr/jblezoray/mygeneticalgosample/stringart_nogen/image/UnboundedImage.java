@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgosample.stringart_nogen;
+package fr.jblezoray.mygeneticalgosample.stringart_nogen.image;
 
 import java.util.Arrays;
 
