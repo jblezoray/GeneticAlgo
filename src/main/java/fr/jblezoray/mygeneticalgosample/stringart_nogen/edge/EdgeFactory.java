@@ -44,21 +44,6 @@ public class EdgeFactory {
   }
   
   
-  /**
-   * draw edges in an image.
-   * 
-   * @param canevas image that will be copied. 
-   * @param additionalEdges edges to add.
-   * @return a copy of the canvas, with the edges drawn.
-   */
-  public UnboundedImage renderImage(UnboundedImage canevas, Edge... additionalEdges) {
-    UnboundedImage copy = new UnboundedImage(canevas);
-    for (Edge e : additionalEdges) {
-      drawEdgeInImage(copy, e);
-    }
-    return copy;
-  }
-
   
   /**
    * Take image 'img', and draw this edge in the image. 
@@ -68,8 +53,9 @@ public class EdgeFactory {
    * 
    * @param img image to be modified 
    * @param edge edge to draw.
+   * @return the img object. 
    */
-  void drawEdgeInImage(UnboundedImage img, Edge edge) {
+  public UnboundedImage drawEdgeInImage(UnboundedImage img, Edge edge) {
     int[] unboundedBytes = img.getUnboundedBytes();
     int bytesIndex = 0;
     byte[] data = edge.getCompressedDrawnEdgeData();
@@ -86,6 +72,7 @@ public class EdgeFactory {
       }
       bytesIndex += howManyPixel;
     }
+    return img;
   }
   
 
@@ -136,7 +123,6 @@ public class EdgeFactory {
       // draw line 
       graphics2D.setColor(Color.BLACK);
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
 
       graphics2D.setStroke(new BasicStroke(this.lineThickness));
       graphics2D.drawLine(

@@ -49,6 +49,10 @@ public class ByteImage implements Image {
   }
   
   @Override
+  public ByteImage asByteImage() {
+    return this;
+  }
+  
   public byte[] getBytes() {
     return bytes;
   }

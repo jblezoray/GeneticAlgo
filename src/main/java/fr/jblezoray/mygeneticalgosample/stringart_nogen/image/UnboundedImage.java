@@ -8,9 +8,9 @@ import java.util.Arrays;
  */
 public class UnboundedImage implements Image {
 
-  private final int[] bytes;
-  
+  private final int[] unboundedBytes;
   private final ImageSize size;
+  private ByteImage clampedCopy;
 
   /** 
    * Blank image constructor (filed with 0xFF).  
@@ -18,34 +18,49 @@ public class UnboundedImage implements Image {
    */
   public UnboundedImage(ImageSize size) {
     this.size = size;
-    this.bytes = new int[this.size.nbPixels];
-    Arrays.fill(this.bytes, 0xFF);
+    this.unboundedBytes = new int[this.size.nbPixels];
+    Arrays.fill(this.unboundedBytes, 0xFF);
+  }
+  
+  private UnboundedImage(ImageSize size, int[] bytes) {
+    this.size = size;
+    this.unboundedBytes = bytes;
   }
   
   /**
-   * Deep copy constructor.
-   * @param image
+   * Constructs a deep copy.
+   * @return
    */
-  public UnboundedImage(UnboundedImage image) {
-    this.size = image.size;
-    this.bytes = Arrays.copyOf(image.bytes, image.bytes.length);
+  public UnboundedImage deepCopy() {
+    return new UnboundedImage(
+        this.size, 
+        Arrays.copyOf(this.unboundedBytes, this.unboundedBytes.length));
   }
   
 
   public int[] getUnboundedBytes() {
-    return this.bytes;
+    this.clampedCopy = null;
+    return this.unboundedBytes;
   }
   
   /** 
-   * Clamps all unbounded ints in [0x00, 0xFF]. 
+   * Clamps all unbounded ints in [0x00, 0xFF], and build a copy from it. 
    */
   @Override
-  public byte[] getBytes() {
-    byte[] clampedBytes = new byte[this.size.nbPixels];
-    for(int i=0; i<this.bytes.length; i++)
-      clampedBytes[i] = (byte)(0x00>this.bytes[i] ? 0x00 : 
-          this.bytes[i]>0xFF ? 0xFF : this.bytes[i]);;
-    return clampedBytes;
+  public ByteImage asByteImage() {
+    if (clampedCopy==null) {
+      synchronized (this) {
+        if (clampedCopy==null) {
+          byte[] clampedBytes = new byte[this.size.nbPixels];
+          for(int i=0; i<this.unboundedBytes.length; i++) {
+            clampedBytes[i] = (byte)(0x00>this.unboundedBytes[i] ? 0x00 : 
+                this.unboundedBytes[i]>0xFF ? 0xFF : this.unboundedBytes[i]);
+          }
+          this.clampedCopy = new ByteImage(size, clampedBytes);
+        }
+      }
+    }
+    return clampedCopy;
   }
 
   @Override

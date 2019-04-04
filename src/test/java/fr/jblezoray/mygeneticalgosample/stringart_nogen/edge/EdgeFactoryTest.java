@@ -35,8 +35,8 @@ public class EdgeFactoryTest {
 
     System.out.println(toString(drawnEdge, 10));
     System.out.println(toString(comp, 10));
-    System.out.println(toString(image.getBytes(), 10));
-    Assert.assertArrayEquals(drawnEdge, image.getBytes());
+    System.out.println(toString(image.asByteImage().getBytes(), 10));
+    Assert.assertArrayEquals(drawnEdge, image.asByteImage().getBytes());
   }
   
   @Test
@@ -50,8 +50,8 @@ public class EdgeFactoryTest {
       f.drawEdgeInImage(image, e);
     }
 
-    System.out.println(toString(image.getBytes(), 10));
-    for (byte b : image.getBytes()) {
+    System.out.println(toString(image.asByteImage().getBytes(), 10));
+    for (byte b : image.asByteImage().getBytes()) {
       int ub = Byte.toUnsignedInt(b);
       Assert.assertTrue(ub==0xFF || ub==0x00);
     }
@@ -77,7 +77,7 @@ public class EdgeFactoryTest {
     f.undrawEdgeInImage(second, e3);
     f.undrawEdgeInImage(second, e2);
 
-    Assert.assertArrayEquals(first.getBytes(), second.getBytes());
+    Assert.assertArrayEquals(first.asByteImage().getBytes(), second.asByteImage().getBytes());
     Assert.assertArrayEquals(first.getUnboundedBytes(), second.getUnboundedBytes());
   }
   

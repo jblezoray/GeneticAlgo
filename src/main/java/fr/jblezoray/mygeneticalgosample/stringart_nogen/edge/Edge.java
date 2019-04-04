@@ -42,5 +42,9 @@ public class Edge {
       
     return compressedDrawnEdgeData;
   }
+
+  public boolean contains(int prevPinFinalCopy) {
+    return this.pinA==prevPinFinalCopy || this.pinB==prevPinFinalCopy;
+  }
   
 }

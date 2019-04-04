@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.edge.Edge;
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.edge.EdgeFactory;
@@ -46,22 +47,26 @@ public class Main {
     while (true) {
       long before = System.currentTimeMillis();
 
-      // search for the edge that contributes the most to the reduction of the norm.
-      AtomicInteger counter = new AtomicInteger();
+      // stream edges that start where the previous one finishes ; skip edges 
+      // that are already in the graph
       final int prevPinFinalCopy = prevPin;
-      final UnboundedImage curImgFinal = curImg;
-      ScoredEdge scoredEdge = edgeFactory.getAllPossibleEdges()
+      Stream<Edge> edgeStream = edgeFactory.getAllPossibleEdges()
           .stream()
-          .parallel()
-          // only edges that start where the previous one finishes ; skip edges 
-          // that are already in the graph
-          .filter(edge -> 
-              (edge.getPinA()==prevPinFinalCopy || edge.getPinB()==prevPinFinalCopy) 
-              && !edges.contains(edge))
-          .peek(edge -> counter.incrementAndGet())
-          // compute a resulting image, and score it. 
+          .filter(edge -> edge.contains(prevPinFinalCopy) && !edges.contains(edge));
+      
+      // for perf. 
+      edgeStream = edgeStream.parallel();
+      
+      // count the number of edges in the stream.
+      AtomicInteger counter = new AtomicInteger();
+      edgeStream = edgeStream.peek(edge -> counter.incrementAndGet());
+
+      // compute a resulting image for each edge and score it to get the edge  
+      // that contributes the most to the reduction of the norm.
+      final UnboundedImage curImgFinal = curImg;
+      ScoredEdge scoredEdge = edgeStream
           .map(edge -> new ScoredEdge(edge, 
-                edgeFactory.renderImage(curImgFinal, edge)
+              edgeFactory.drawEdgeInImage(curImgFinal.deepCopy(), edge)
                   .differenceWith(refImg)
                   .multiplyWith(importanceMappingImg)
                   .l2norm()))
@@ -79,7 +84,7 @@ public class Main {
       }
 
       // save image !
-      curImg = edgeFactory.renderImage(curImg, scoredEdge.getEdge());
+      edgeFactory.drawEdgeInImage(curImg, scoredEdge.getEdge());
       edges.add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
       prevPin = scoredEdge.getEdge().getPinA() == prevPin ? 

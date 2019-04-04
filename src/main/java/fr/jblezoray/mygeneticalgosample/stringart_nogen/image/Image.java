@@ -3,19 +3,20 @@ package fr.jblezoray.mygeneticalgosample.stringart_nogen.image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
 public interface Image {
 
-  byte[] getBytes();
+  ByteImage asByteImage();
   
   ImageSize getSize();
   
 
   default BufferedImage toBufferedImage() {
     ImageSize size = getSize();
-    byte[] bytes = getBytes();
+    byte[] bytes = asByteImage().getBytes();
     BufferedImage result = new BufferedImage(
         size.w, size.h, BufferedImage.TYPE_BYTE_GRAY);
     result.getRaster().setDataElements(0, 0, size.w, size.h, bytes);
@@ -33,45 +34,46 @@ public interface Image {
    * @param other
    * @return
    */
-  default Image differenceWith(Image other) {
+  default Image differenceWith(Image other) { // 44%
     ImageSize size = getSize();
     if (!size.equals(other.getSize()))
       throw new RuntimeException("Images do not have the same size.");
 
-    byte[] thisBytes = getBytes();
-    byte[] otherBytes = other.getBytes();
+    byte[] thisBytes = asByteImage().getBytes();
+    byte[] otherBytes = other.asByteImage().getBytes();
     byte[] diff = new byte[size.nbPixels];
     
-    for (int i=0; i<size.nbPixels; i++) {
-      int thisPixel = Byte.toUnsignedInt(thisBytes[i]);
-      int otherPixel = Byte.toUnsignedInt(otherBytes[i]);
+    IntStream.range(0, size.nbPixels).parallel().forEach(i -> {
+      int thisPixel = ((int) thisBytes[i]) & 0xff;
+      int otherPixel = ((int) otherBytes[i]) & 0xff;
       // the darker, the better. 
-      diff[i] = (byte) (Math.abs(thisPixel - otherPixel)); 
-    }
+      int diffPixel = thisPixel - otherPixel;
+      diff[i] = (byte) (diffPixel<0 ? -diffPixel : diffPixel);
+    });
     return new ByteImage(size, diff);
   }
   
   
   /**
-   *  
-   * @param referenceImage
-   * @param importanceMappingImage
+   * Multiply each pixel of this image with the ones from 'other'.
+   *    
+   * @param other
    * @return
    */
-  default Image multiplyWith(Image other) {
+  default Image multiplyWith(Image other) { // 27.9
     ImageSize size = getSize();
     if (!size.equals(other.getSize()))
       throw new RuntimeException("Images do not have the same size.");
     
-    byte[] thisBytes = getBytes();
-    byte[] otherBytes = other.getBytes();
+    byte[] thisBytes = asByteImage().getBytes();
+    byte[] otherBytes = other.asByteImage().getBytes();
     byte[] output = new byte[size.nbPixels];
-    
-    for (int i=0; i<size.nbPixels; i++) {
-      int thisPixel = Byte.toUnsignedInt(thisBytes[i]);
-      int otherPixel = Byte.toUnsignedInt(otherBytes[i]);
+
+    IntStream.range(0, size.nbPixels).parallel().forEach(i -> {
+      int thisPixel = ((int) thisBytes[i]) & 0xff;
+      int otherPixel = ((int) otherBytes[i]) & 0xff;
       output[i] = (byte)(thisPixel * otherPixel / (float)0xFF);
-    }
+    });
     return new ByteImage(size, output);
   }
 
@@ -91,7 +93,7 @@ public interface Image {
    */
   default double l2norm() {
     long sum = 0;
-    for (byte b : this.getBytes()) {
+    for (byte b : this.asByteImage().getBytes()) {
       int unsigned = Byte.toUnsignedInt(b);
       sum += unsigned * unsigned;
     }
