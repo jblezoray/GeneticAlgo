@@ -16,13 +16,14 @@ import fr.jblezoray.mygeneticalgosample.stringart_nogen.image.UnboundedImage;
 
 public class Main {
 
+  private static final float CANVAS_WIDTH_MILLIMETERS = 630.0f;
+  private static final float THREAD_THICKNESS_MILLIMETERS = 0.15f; 
+  private static final float PIN_DIAMETER_MILLIMETERS = 2.0f;
   private static final int NB_NAILS = 200;
-  private static final float LINE_THICKNESS = 1.0f;
-  
+
   public static void main(String[] args) throws IOException {
     // load the reference image
-    Image refImg = new ByteImage("samples/stringart/einstein.png");
-    refImg.writeToFile(new File("_refImg.png"));
+    Image refImg = new ByteImage("einstein.png");
     
     // load the importance image 
     // Each pixel the importance image describes the influence of the 
@@ -31,18 +32,24 @@ public class Main {
     // fitness. A value of OxFF corresponds to the maximum influence possible.
     // Therefore, the brighter the zone are in the importanceMappingImage, the
     // more they represent important features of the reference image.
-    Image importanceMappingImg =  new ByteImage("samples/stringart/einstein_features.png");
-    importanceMappingImg.writeToFile(new File("_features.png"));
+    Image importanceMappingImg =  new ByteImage("einstein_features2.png");
     
     // edges of the image to build.
     List<Edge> edges = new ArrayList<>();
 
-    // optimization algo
+    // the line thickness depends on the resolution and on the thread thickness.
+    // Same for the wize of each nail. 
     ImageSize size = refImg.getSize();
-    EdgeFactory edgeFactory = new EdgeFactory(size, NB_NAILS, LINE_THICKNESS);
+    float resolutionMmPerPx = CANVAS_WIDTH_MILLIMETERS / size.w;
+    float lineThicknessInPx = THREAD_THICKNESS_MILLIMETERS / resolutionMmPerPx;
+    float pinDiameterInPx = PIN_DIAMETER_MILLIMETERS / resolutionMmPerPx;
+
+    // optimization algo
+    EdgeFactory edgeFactory = new EdgeFactory(size, NB_NAILS, lineThicknessInPx);
     double prevNorm = Float.MAX_VALUE;
     int prevPin = 0; 
     UnboundedImage curImg = new UnboundedImage(size);
+    edgeFactory.drawAllPins(curImg, pinDiameterInPx);
     int iteration = 0;
     while (true) {
       long before = System.currentTimeMillis();
@@ -74,11 +81,6 @@ public class Main {
           .orElseThrow(() -> new RuntimeException());
       long after = System.currentTimeMillis();
 
-      // find the edge that, if removed, contributes the most to the reduction 
-      // of the norm. 
-      // TODO 
-
-      // stop if we reached an optimal form (the best result)
       if (scoredEdge.getNorm()>prevNorm) {
         break;
       }
@@ -99,7 +101,7 @@ public class Main {
       }
       long rendered = System.currentTimeMillis();
       System.out.println(String.format(
-          "iteration:%d ; norm:%7.0f ; pins:%3d,%3d ; choose:%5dms (mean:%d*%.3fms) ; drawing:%5dms)",
+          "iteration:%d ; norm:%7.0f ; pins:%3d,%3d ; choose:%5dms (mean:%d*%2.3fms) ; drawing:%5dms)",
           iteration,
           scoredEdge.getNorm(), 
           scoredEdge.getEdge().getPinA(), 

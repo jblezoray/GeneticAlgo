@@ -34,7 +34,7 @@ public interface Image {
    * @param other
    * @return
    */
-  default Image differenceWith(Image other) { // 44%
+  default Image differenceWith(Image other) {
     ImageSize size = getSize();
     if (!size.equals(other.getSize()))
       throw new RuntimeException("Images do not have the same size.");
@@ -58,9 +58,9 @@ public interface Image {
    * Multiply each pixel of this image with the ones from 'other'.
    *    
    * @param other
-   * @return
+   * @return a new image. 
    */
-  default Image multiplyWith(Image other) { // 27.9
+  default Image multiplyWith(Image other) {
     ImageSize size = getSize();
     if (!size.equals(other.getSize()))
       throw new RuntimeException("Images do not have the same size.");

@@ -44,6 +44,51 @@ public class EdgeFactory {
   }
   
   
+  /**
+   * Draws all the pins in the image. 
+   * 
+   * The implementation is obviously suboptimal, but we don't care as it's meant
+   * to be run only once.
+   * 
+   * @param original
+   * @param pinPxRadius
+   */
+  public void drawAllPins(UnboundedImage original, float pinPxRadius) {
+
+    BufferedImage image = new BufferedImage(
+        this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
+    
+    Graphics2D graphics2D = null;
+    try {
+      // create a new blank image. 
+      graphics2D = image.createGraphics();
+      graphics2D.setBackground(Color.WHITE);
+      graphics2D.clearRect(0, 0, this.size.w, this.size.h);
+      
+      // draw all pins
+      graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      graphics2D.setColor(Color.BLACK);
+      int pinPxRadiusInt = Math.max(1, (int)pinPxRadius);
+      for (int i=0; i<this.totalNumberOfNails; i++) {
+        int x = xNail2Position(i); 
+        int y = yNail2Position(i); 
+        graphics2D.fillOval(
+            x-pinPxRadiusInt/2, y-pinPxRadiusInt/2, 
+            pinPxRadiusInt, pinPxRadiusInt);
+      }
+      
+    } finally {
+      if (graphics2D!=null) graphics2D.dispose();
+    }
+    byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+    
+    // add all the drawn pins in the original image. 
+    int[] bytes = original.getUnboundedBytes();
+    for (int i=0; i<bytes.length; i++) {
+      bytes[i] += Byte.toUnsignedInt(pixels[i]) - 0xFF;
+    }
+  }
+  
   
   /**
    * Take image 'img', and draw this edge in the image. 
@@ -123,20 +168,10 @@ public class EdgeFactory {
       // draw line 
       graphics2D.setColor(Color.BLACK);
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
       graphics2D.setStroke(new BasicStroke(this.lineThickness));
       graphics2D.drawLine(
           xNail2Position(pinA), yNail2Position(pinA), 
           xNail2Position(pinB), yNail2Position(pinB));
-
-      // draw nails.
-      graphics2D.setColor(new Color(0,0,0,255));
-      int nailRadius = 2;
-      for (int i=0; i<this.totalNumberOfNails; i++) {
-        int x = xNail2Position(i); 
-        int y = yNail2Position(i); 
-        graphics2D.fillOval(x-nailRadius/2, y-nailRadius/2, nailRadius, nailRadius);
-      }
       
     } finally {
       if (graphics2D!=null) graphics2D.dispose();
@@ -145,7 +180,6 @@ public class EdgeFactory {
     byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
     return pixels;
   }
-  
   
   /**
    * returns a x position in the image for a nail index. 
