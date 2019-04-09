@@ -19,7 +19,7 @@ public class Main {
   private static final float CANVAS_WIDTH_MILLIMETERS = 630.0f;
   private static final float THREAD_THICKNESS_MILLIMETERS = 0.15f; 
   private static final float PIN_DIAMETER_MILLIMETERS = 2.0f;
-  private static final int NB_NAILS = 200;
+  private static final int NB_NAILS = 256;
 
   public static void main(String[] args) throws IOException {
     // load the reference image
@@ -45,11 +45,13 @@ public class Main {
     float pinDiameterInPx = PIN_DIAMETER_MILLIMETERS / resolutionMmPerPx;
 
     // optimization algo
-    EdgeFactory edgeFactory = new EdgeFactory(size, NB_NAILS, lineThicknessInPx);
+    EdgeFactory edgeFactory = 
+        new EdgeFactory(size, NB_NAILS, lineThicknessInPx, pinDiameterInPx);
     double prevNorm = Float.MAX_VALUE;
     int prevPin = 0; 
+    boolean isPrevPinClockwise = false;
     UnboundedImage curImg = new UnboundedImage(size);
-    edgeFactory.drawAllPins(curImg, pinDiameterInPx);
+    edgeFactory.drawAllPins(curImg);
     int iteration = 0;
     while (true) {
       long before = System.currentTimeMillis();
@@ -57,9 +59,12 @@ public class Main {
       // stream edges that start where the previous one finishes ; skip edges 
       // that are already in the graph
       final int prevPinFinalCopy = prevPin;
+      final boolean isPrevPinClockwiseFinalCopy = isPrevPinClockwise;
       Stream<Edge> edgeStream = edgeFactory.getAllPossibleEdges()
           .stream()
-          .filter(edge -> edge.contains(prevPinFinalCopy) && !edges.contains(edge));
+          .filter(edge -> 
+              edge.contains(prevPinFinalCopy, !isPrevPinClockwiseFinalCopy) 
+              && !edges.contains(edge));
       
       // for perf. 
       edgeStream = edgeStream.parallel();
@@ -89,8 +94,15 @@ public class Main {
       edgeFactory.drawEdgeInImage(curImg, scoredEdge.getEdge());
       edges.add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
-      prevPin = scoredEdge.getEdge().getPinA() == prevPin ? 
-          scoredEdge.getEdge().getPinB() : scoredEdge.getEdge().getPinA();
+      
+      // store the new prev pin.
+      if (scoredEdge.getEdge().getPinA() == prevPin) {
+        prevPin = scoredEdge.getEdge().getPinB();
+        isPrevPinClockwise = scoredEdge.getEdge().isPinBClockwise();
+      } else {
+        prevPin = scoredEdge.getEdge().getPinA();
+        isPrevPinClockwise = scoredEdge.getEdge().isPinAClockwise();
+      }
       
       // debug stuffs...
       if (iteration++%50 == 0) {

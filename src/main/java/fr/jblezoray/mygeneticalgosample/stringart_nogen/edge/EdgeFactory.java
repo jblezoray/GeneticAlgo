@@ -19,21 +19,27 @@ public class EdgeFactory {
   private final ImageSize size;
   private final int totalNumberOfNails;
   private final float lineThickness;
+  private final int pinPxRadiusInt;
   private final int minNailDiff;
   private final List<Edge> allPossibleEdges;
 
-  public EdgeFactory(ImageSize size, int totalNumberOfNails, float lineThickness) {
+  
+  public EdgeFactory(ImageSize size, int totalNumberOfNails, 
+      float lineThickness, float pinDiameterInPx) {
     this.size = size;
-    this.totalNumberOfNails = totalNumberOfNails;
+    this.totalNumberOfNails = totalNumberOfNails; 
     this.lineThickness = lineThickness;
-    this.minNailDiff = totalNumberOfNails/10==0 ? 1 : totalNumberOfNails/10;
+    this.pinPxRadiusInt = Math.max(1, (int)pinDiameterInPx);
+    this.minNailDiff = Math.max(1, (int)totalNumberOfNails/4);
     
     this.allPossibleEdges = new ArrayList<>();
     for (int i=0; i<totalNumberOfNails; i++) {
-      for (int j=i; j<totalNumberOfNails; j++) {
-        if (Math.abs(i - j) > totalNumberOfNails / minNailDiff) {
-          allPossibleEdges.add(new Edge(i, j, this));
-        }
+      for (int j=i+minNailDiff; j<totalNumberOfNails-minNailDiff; j++) {
+        // one for each possible connection between two nails.
+        allPossibleEdges.add(new Edge(i, true,  j, true,  this));
+        allPossibleEdges.add(new Edge(i, false, j, true,  this));
+        allPossibleEdges.add(new Edge(i, true,  j, false, this));
+        allPossibleEdges.add(new Edge(i, false, j, false, this));
       }
     }
   }
@@ -51,9 +57,8 @@ public class EdgeFactory {
    * to be run only once.
    * 
    * @param original
-   * @param pinPxRadius
    */
-  public void drawAllPins(UnboundedImage original, float pinPxRadius) {
+  public void drawAllPins(UnboundedImage original) {
 
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
@@ -68,7 +73,6 @@ public class EdgeFactory {
       // draw all pins
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       graphics2D.setColor(Color.BLACK);
-      int pinPxRadiusInt = Math.max(1, (int)pinPxRadius);
       for (int i=0; i<this.totalNumberOfNails; i++) {
         int x = xNail2Position(i); 
         int y = yNail2Position(i); 
@@ -87,6 +91,27 @@ public class EdgeFactory {
     for (int i=0; i<bytes.length; i++) {
       bytes[i] += Byte.toUnsignedInt(pixels[i]) - 0xFF;
     }
+  }
+  
+  /**
+   * returns a x position in the image for a nail index. 
+   * @param nailIndex
+   * @return
+   */
+  private int xNail2Position(int nailIndex) {
+    double sinX = Math.sin(nailIndex*2*Math.PI/this.totalNumberOfNails);
+    return (int)(sinX*(this.size.w/2) + (this.size.w/2));
+  }
+
+
+  /**
+   * returns a y position in the image for a nail index. 
+   * @param nailIndex
+   * @return
+   */
+  private int yNail2Position(int nailIndex) {
+    double cosY = Math.cos(nailIndex*2*Math.PI/this.totalNumberOfNails);
+    return (int)(-cosY*(this.size.h/2) + (this.size.h/2));
   }
   
   
@@ -152,9 +177,14 @@ public class EdgeFactory {
    * 
    * This method is slow.  
    *   
+   * @param pinA
+   * @param pinAClockwise
+   * @param pinB
+   * @param pinBClockwise
    * @return
    */
-  byte[] getDrawnEdge(int pinA, int pinB) {
+  byte[] getDrawnEdge(int pinA, boolean pinAClockwise, 
+      int pinB, boolean pinBClockwise) {
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
     
@@ -170,8 +200,10 @@ public class EdgeFactory {
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       graphics2D.setStroke(new BasicStroke(this.lineThickness));
       graphics2D.drawLine(
-          xNail2Position(pinA), yNail2Position(pinA), 
-          xNail2Position(pinB), yNail2Position(pinB));
+          xNail2ThreadPosition(pinA, pinAClockwise), 
+          yNail2ThreadPosition(pinA, pinAClockwise), 
+          xNail2ThreadPosition(pinB, pinBClockwise), 
+          yNail2ThreadPosition(pinB, pinBClockwise));
       
     } finally {
       if (graphics2D!=null) graphics2D.dispose();
@@ -181,25 +213,38 @@ public class EdgeFactory {
     return pixels;
   }
   
+  
   /**
-   * returns a x position in the image for a nail index. 
-   * @param nailIndex
+   * returns a x position in the image for a string just after its revolution 
+   * around a nail.
+   *  
+   * @param nailIndex the nail.
+   * @param clockwise turn clockwise or anticlockwise.
    * @return
    */
-  private int xNail2Position(int nailIndex) {
-    double sinX = Math.sin(nailIndex*2*Math.PI/this.totalNumberOfNails);
-    return (int)(sinX*(this.size.w/2) + (this.size.w/2));
+  private int xNail2ThreadPosition(int nailIndex, boolean clockwise) {
+    double imgCenter = this.size.w / 2.0d;
+    double pinDeviation = 2.0d*Math.PI*nailIndex/this.totalNumberOfNails;
+    double wayDeviation = (double)this.pinPxRadiusInt/this.size.w;
+    double way = clockwise ? -1.0d : 1.0d;
+    return (int)((1 + Math.sin(pinDeviation + way * wayDeviation)) * imgCenter);
   }
 
 
   /**
-   * returns a y position in the image for a nail index. 
-   * @param nailIndex
+   * returns a y position in the image for a string just after its revolution 
+   * around a nail.
+   *  
+   * @param nailIndex the nail.
+   * @param clockwise turn clockwise or anticlockwise.
    * @return
    */
-  private int yNail2Position(int nailIndex) {
-    double cosY = Math.cos(nailIndex*2*Math.PI/this.totalNumberOfNails);
-    return (int)(-cosY*(this.size.h/2) + (this.size.h/2));
+  private int yNail2ThreadPosition(int nailIndex, boolean clockwise) {
+    double imgCenter = this.size.h / 2.0d;
+    double pinDeviation = 2.0d*Math.PI*nailIndex/this.totalNumberOfNails;
+    double wayDeviation = (double)this.pinPxRadiusInt/this.size.h;
+    double way = clockwise ? -1.0d : 1.0d;
+    return (int)((1 - Math.cos(pinDeviation + way * wayDeviation)) * imgCenter);
   }
   
   
