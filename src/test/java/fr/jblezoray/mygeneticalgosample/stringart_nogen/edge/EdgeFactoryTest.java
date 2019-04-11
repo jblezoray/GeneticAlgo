@@ -7,13 +7,14 @@ import fr.jblezoray.mygeneticalgosample.stringart_nogen.image.ImageSize;
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.image.UnboundedImage;
 
 public class EdgeFactoryTest {
+
+  
   
   @Test
   public void compressed_image_shall_encode_the_right_nb_of_bytes() {
     ImageSize size = new ImageSize(1000, 1000);
-    EdgeFactory f = new EdgeFactory(size, 5, 1.0f);
-    
-    byte[] drawnEdge = f.getDrawnEdge(1, 3);
+    EdgeFactory f = new EdgeFactory(size, 5, 1.0f, 2.0f, 0);
+    byte[] drawnEdge = f.getDrawnEdge(1, false, 3, false);
     byte[] comp = f.compressDrawnEdgeData(drawnEdge);
 
     int cpt = 0;
@@ -25,11 +26,11 @@ public class EdgeFactoryTest {
   @Test
   public void drawing_a_edge_on_a_white_image_equals_the_edge_itself() {
     ImageSize size = new ImageSize(10, 10);
-    EdgeFactory f = new EdgeFactory(size, 5, 1.0f);
-    Edge e = new Edge(1, 3, f);
+    EdgeFactory f = new EdgeFactory(size, 5, 1.0f, 2.0f, 0);
+    Edge e = new Edge(1, false, 3, false, f);
     UnboundedImage image = new UnboundedImage(size);
 
-    byte[] drawnEdge = f.getDrawnEdge(1, 3);
+    byte[] drawnEdge = f.getDrawnEdge(1, false, 3, false);
     byte[] comp = f.compressDrawnEdgeData(drawnEdge);
     f.drawEdgeInImage(image, e);
 
@@ -42,8 +43,8 @@ public class EdgeFactoryTest {
   @Test
   public void drawing_a_edge_multiple_times_results_in_a_black_and_white_image() {
     ImageSize size = new ImageSize(10, 10);
-    EdgeFactory f = new EdgeFactory(size, 5, 1.0f);
-    Edge e = new Edge(1, 3, f);
+    EdgeFactory f = new EdgeFactory(size, 5, 1.0f, 2.0f, 0);
+    Edge e = new Edge(1, false, 3, false, f);
     UnboundedImage image = new UnboundedImage(size);
     
     for (int i=0; i<100; i++) {
@@ -61,10 +62,10 @@ public class EdgeFactoryTest {
   @Test
   public void a_drawn_edge_can_be_removed() {
     ImageSize size = new ImageSize(10, 10);
-    EdgeFactory f = new EdgeFactory(size, 5, 1.0f);
-    Edge e1 = new Edge(1, 3, f);
-    Edge e2 = new Edge(2, 4, f);
-    Edge e3 = new Edge(0, 3, f);
+    EdgeFactory f = new EdgeFactory(size, 5, 1.0f, 2.0f, 0);
+    Edge e1 = new Edge(1, false, 3, false, f);
+    Edge e2 = new Edge(2, false, 4, false, f);
+    Edge e3 = new Edge(0, false, 3, false, f);
 
     UnboundedImage first = new UnboundedImage(size);
     f.drawEdgeInImage(first, e1);

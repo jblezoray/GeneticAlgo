@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.edge.Edge;
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.edge.EdgeFactory;
+import fr.jblezoray.mygeneticalgosample.stringart_nogen.edge.ScoredEdge;
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.image.ByteImage;
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.image.Image;
 import fr.jblezoray.mygeneticalgosample.stringart_nogen.image.ImageSize;
@@ -23,12 +24,12 @@ public class StringArtAlgo {
   private static final int MIN_NAILS_DIFF = Math.max(1, (int)NB_NAILS/20);
 
   /**
-   * the reference image
+   * The reference image.
    */
   private final Image refImg;
   
   /**
-   * The importance image 
+   * The importance image.
    * 
    * Each pixel the importance image describes the influence of the
    * corresponding pixel in the reference image.  
@@ -40,7 +41,7 @@ public class StringArtAlgo {
   private final Image importanceMappingImg;
   
   /**
-   * size of the reference image.
+   * Size of the reference image.
    */
   private final ImageSize size;
 
@@ -64,8 +65,23 @@ public class StringArtAlgo {
    */
   private final EdgeFactory edgeFactory;
 
+  /**
+   * If enabled, then the way a thread turns around a pin is considered. 
+   */
+  private boolean edgeWayEnabled;
   
-  public StringArtAlgo(String refImage, String importanceMappingImg) throws IOException {
+  /**
+   * 
+   * @param refImage
+   * @param importanceMappingImg
+   * @param edgeWayEnabled disable to get faster processing, enable to lessen 
+   *        the moiré effect. 
+   * @throws IOException
+   */
+  public StringArtAlgo(
+      String refImage, 
+      String importanceMappingImg, 
+      boolean edgeWayEnabled) throws IOException {
     this.refImg = new ByteImage(refImage);
     this.importanceMappingImg = new ByteImage(importanceMappingImg);
     this.size = this.refImg.getSize();
@@ -74,9 +90,10 @@ public class StringArtAlgo {
     this.pinDiameterInPx = PIN_DIAMETER_MILLIMETERS / resolutionMmPerPx;
     this.edgeFactory = new EdgeFactory(
         size, NB_NAILS, lineThicknessInPx, pinDiameterInPx, MIN_NAILS_DIFF);
+    this.edgeWayEnabled = false;
   }
-
-
+  
+  
   public void start() {
     // edges of the image to build.
     List<Edge> edges = new ArrayList<>();
@@ -97,9 +114,11 @@ public class StringArtAlgo {
       // search for the edge that, when added to 'curImg', results in the 
       // maximum reduction of the norm. 
       long before = System.currentTimeMillis();
-      AtomicInteger counterOfEvaluatedEdges = new AtomicInteger();
-      scoredEdge = findBestEdgeToAdd(curImg, edges, prevPin, isPrevPinClockwise,
-          counterOfEvaluatedEdges);
+      AtomicInteger numberOfEdges = new AtomicInteger();
+      Stream<Edge> edgeStream = 
+          streamPossibleEdgesFromPin(prevPin, isPrevPinClockwise, edges)
+          .peek(edge -> numberOfEdges.incrementAndGet());
+      scoredEdge = findBestEdgeToAdd(curImg, edgeStream);
       long after = System.currentTimeMillis();
 
       // store the new prev pin.
@@ -114,9 +133,53 @@ public class StringArtAlgo {
         isPrevPinClockwise = scoredEdge.getEdge().isPinAClockwise();
       }
       
-      printDebugInfo(iteration, curImg, scoredEdge, counterOfEvaluatedEdges,
-          after-before);
-    } while (scoredEdge.getNorm()>prevNorm); // stop if it does not reduces the norm.
+      printDebugInfo(++iteration, curImg, scoredEdge, numberOfEdges, after-before);
+      
+    } while (scoredEdge.getNorm()<=prevNorm); // stop if it does not reduces the norm.
+  }
+  
+  
+  /**
+   * Stream edges that start where the previous one finishes, and skip edges 
+   * that are already in the graph.
+   * 
+   * @param pin
+   * @param isPinClockwise
+   * @param edgesInImage  the edges that are already in the image.
+   * @return a parallel stream of the available pins.
+   */
+  private Stream<Edge> streamPossibleEdgesFromPin(
+      int pin, boolean isPinClockwise, List<Edge> edgesInImage) {
+    boolean clockwise = edgeWayEnabled ? !isPinClockwise : false;
+    return this.edgeFactory
+        .getAllPossibleEdges()
+        .stream()
+        .filter(edge -> 
+            edge.contains(pin, clockwise)
+            && (edgeWayEnabled||edge.isPinAClockwise()==edge.isPinBClockwise())
+            && !edgesInImage.contains(edge))
+        .parallel(); // for perf. 
+  }
+  
+
+  /**
+   * Compute a resulting image for each edge and score it to get the edge that 
+   * contributes the most to the reduction of the norm.
+   * 
+   * @param curImg the current image (will be left untouched)
+   * @param edgeStream the possible edges to add.
+   * @return The best Edge to add, and the resulting score.
+   */
+  private ScoredEdge findBestEdgeToAdd(
+      UnboundedImage curImg, Stream<Edge> edgeStream) {
+    return edgeStream
+        .map(edge -> new ScoredEdge(edge, 
+            this.edgeFactory.drawEdgeInImage(curImg.deepCopy(), edge)
+                .differenceWith(refImg)
+                .multiplyWith(importanceMappingImg)
+                .l2norm()))
+        .min((a, b) -> a.getNorm() < b.getNorm()? -1 : 1)
+        .orElseThrow(() -> new RuntimeException());
   }
 
 
@@ -132,7 +195,7 @@ public class StringArtAlgo {
       ScoredEdge scoredEdge, AtomicInteger counterOfEvaluatedEdges,
       long timeTookForThisRound) {
     
-    boolean drawn = iteration++%50 == 0;
+    boolean drawn = iteration%50 == 0;
     if (drawn) {
       try {
         curImg.writeToFile(new File("_rendering.png"));
@@ -158,34 +221,4 @@ public class StringArtAlgo {
   }
 
 
-  private ScoredEdge findBestEdgeToAdd(UnboundedImage curImg, List<Edge> edges,
-      int prevPin, boolean isPrevPinClockwise, AtomicInteger edgesCounter) {
-
-    // stream edges that start where the previous one finishes ; skip edges 
-    // that are already in the graph
-    Stream<Edge> edgeStream = this.edgeFactory.getAllPossibleEdges()
-        .stream()
-        .filter(edge -> 
-            edge.contains(prevPin, !isPrevPinClockwise) 
-            && !edges.contains(edge));
-    
-    // for perf. 
-    edgeStream = edgeStream.parallel();
-    
-    // count the number of edges in the stream.
-    edgeStream = edgeStream.peek(edge -> edgesCounter.incrementAndGet());
-
-    // compute a resulting image for each edge and score it to get the edge  
-    // that contributes the most to the reduction of the norm.
-    ScoredEdge scoredEdge = edgeStream
-        .map(edge -> new ScoredEdge(edge, 
-            this.edgeFactory.drawEdgeInImage(curImg.deepCopy(), edge)
-                .differenceWith(refImg)
-                .multiplyWith(importanceMappingImg)
-                .l2norm()))
-        .min((a, b) -> a.getNorm() < b.getNorm()? -1 : 1)
-        .orElseThrow(() -> new RuntimeException());
-    
-    return scoredEdge;
-  }
 }
