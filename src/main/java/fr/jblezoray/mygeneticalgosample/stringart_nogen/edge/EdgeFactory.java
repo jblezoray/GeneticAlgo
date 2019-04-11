@@ -20,26 +20,25 @@ public class EdgeFactory {
   private final int totalNumberOfNails;
   private final float lineThickness;
   private final int pinPxRadiusInt;
-  private final int minNailDiff;
   private final List<Edge> allPossibleEdges;
 
   
   public EdgeFactory(ImageSize size, int totalNumberOfNails, 
-      float lineThickness, float pinDiameterInPx) {
+      float lineThickness, float pinDiameterInPx, int minNailDiff) {
     this.size = size;
     this.totalNumberOfNails = totalNumberOfNails; 
     this.lineThickness = lineThickness;
     this.pinPxRadiusInt = Math.max(1, (int)pinDiameterInPx);
-    this.minNailDiff = Math.max(1, (int)totalNumberOfNails/4);
-    
     this.allPossibleEdges = new ArrayList<>();
     for (int i=0; i<totalNumberOfNails; i++) {
-      for (int j=i+minNailDiff; j<totalNumberOfNails-minNailDiff; j++) {
-        // one for each possible connection between two nails.
-        allPossibleEdges.add(new Edge(i, true,  j, true,  this));
-        allPossibleEdges.add(new Edge(i, false, j, true,  this));
-        allPossibleEdges.add(new Edge(i, true,  j, false, this));
-        allPossibleEdges.add(new Edge(i, false, j, false, this));
+      for (int j=i; j<totalNumberOfNails; j++) {
+        if (Math.abs(j-i) > minNailDiff) {
+          // one for each possible connection between two nails.
+          allPossibleEdges.add(new Edge(i, true,  j, true,  this));
+          allPossibleEdges.add(new Edge(i, false, j, true,  this));
+          allPossibleEdges.add(new Edge(i, true,  j, false, this));
+          allPossibleEdges.add(new Edge(i, false, j, false, this));
+        }
       }
     }
   }
