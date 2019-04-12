@@ -1,3 +1,5 @@
+THIS FILE IS NOT UP TO DATE
+
 # About 
 
 This repository is just an experimentation around genetic algorithms. 
