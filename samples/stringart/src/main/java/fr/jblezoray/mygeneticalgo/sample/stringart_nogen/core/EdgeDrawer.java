@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge;
+package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -7,58 +7,44 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
+import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.Edge;
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ImageSize;
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.UnboundedImage;
 
-public class EdgeFactory {
+public class EdgeDrawer {
 
   private final ImageSize size;
   private final int totalNumberOfNails;
-  private final float lineThickness;
-  private final int pinPxRadiusInt;
-  private final List<Edge> allPossibleEdges;
-
-  
-  public EdgeFactory(ImageSize size, int totalNumberOfNails, 
-      float lineThickness, float pinDiameterInPx, int minNailDiff) {
-    this.size = size;
-    this.totalNumberOfNails = totalNumberOfNails; 
-    this.lineThickness = lineThickness;
-    this.pinPxRadiusInt = Math.max(1, (int)pinDiameterInPx);
-    this.allPossibleEdges = new ArrayList<>();
-    for (int i=0; i<totalNumberOfNails; i++) {
-      for (int j=i; j<totalNumberOfNails; j++) {
-        if (Math.abs(j-i) > minNailDiff) {
-          // one for each possible connection between two nails.
-          allPossibleEdges.add(new Edge(i, true,  j, true,  this));
-          allPossibleEdges.add(new Edge(i, false, j, true,  this));
-          allPossibleEdges.add(new Edge(i, true,  j, false, this));
-          allPossibleEdges.add(new Edge(i, false, j, false, this));
-        }
-      }
-    }
-  }
-  
-
-  public Collection<Edge> getAllPossibleEdges() {
-    return allPossibleEdges;
-  }
-  
   
   /**
-   * Draws all the pins in the image. 
+   * Width of the lines (threads) when represented in the image.  
+   */
+  private final float lineThicknessInPx;
+
+  /**
+   * Diameter of the nails.
+   */
+  private final int nailPxRadiusInt;
+  
+  public EdgeDrawer(ImageSize size, int totalNumberOfNails, 
+      float lineThickness, float nailDiameterInPx) {
+    this.size = size;
+    this.totalNumberOfNails = totalNumberOfNails; 
+    this.lineThicknessInPx = lineThickness;
+    this.nailPxRadiusInt = Math.max(1, (int)nailDiameterInPx);
+  }
+  
+  /**
+   * Draws all the nails in the image. 
    * 
    * The implementation is obviously suboptimal, but we don't care as it's meant
    * to be run only once.
    * 
    * @param original
    */
-  public void drawAllPins(UnboundedImage original) {
-
+  public void drawAllNails(UnboundedImage original) {
+    
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
     
@@ -69,15 +55,15 @@ public class EdgeFactory {
       graphics2D.setBackground(Color.WHITE);
       graphics2D.clearRect(0, 0, this.size.w, this.size.h);
       
-      // draw all pins
+      // draw all nails
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       graphics2D.setColor(Color.BLACK);
       for (int i=0; i<this.totalNumberOfNails; i++) {
         int x = xNail2Position(i); 
         int y = yNail2Position(i); 
         graphics2D.fillOval(
-            x-pinPxRadiusInt/2, y-pinPxRadiusInt/2, 
-            pinPxRadiusInt, pinPxRadiusInt);
+            x-nailPxRadiusInt/2, y-nailPxRadiusInt/2, 
+            nailPxRadiusInt, nailPxRadiusInt);
       }
       
     } finally {
@@ -85,12 +71,13 @@ public class EdgeFactory {
     }
     byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
     
-    // add all the drawn pins in the original image. 
+    // add all the drawn nails in the original image. 
     int[] bytes = original.getUnboundedBytes();
     for (int i=0; i<bytes.length; i++) {
       bytes[i] += Byte.toUnsignedInt(pixels[i]) - 0xFF;
     }
   }
+  
   
   /**
    * returns a x position in the image for a nail index. 
@@ -112,7 +99,7 @@ public class EdgeFactory {
     double cosY = Math.cos(nailIndex*2*Math.PI/this.totalNumberOfNails);
     return (int)(-cosY*(this.size.h/2) + (this.size.h/2));
   }
-  
+
   
   /**
    * Take image 'img', and draw this edge in the image. 
@@ -176,14 +163,14 @@ public class EdgeFactory {
    * 
    * This method is slow.  
    *   
-   * @param pinA
-   * @param pinAClockwise
-   * @param pinB
-   * @param pinBClockwise
+   * @param nailA
+   * @param nailAClockwise
+   * @param nailB
+   * @param nailBClockwise
    * @return
    */
-  byte[] getDrawnEdge(int pinA, boolean pinAClockwise, 
-      int pinB, boolean pinBClockwise) {
+  public byte[] getDrawnEdge(int nailA, boolean nailAClockwise, 
+      int nailB, boolean nailBClockwise) {
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
     
@@ -197,12 +184,12 @@ public class EdgeFactory {
       // draw line 
       graphics2D.setColor(Color.BLACK);
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      graphics2D.setStroke(new BasicStroke(this.lineThickness));
+      graphics2D.setStroke(new BasicStroke(this.lineThicknessInPx));
       graphics2D.drawLine(
-          xNail2ThreadPosition(pinA, pinAClockwise), 
-          yNail2ThreadPosition(pinA, pinAClockwise), 
-          xNail2ThreadPosition(pinB, pinBClockwise), 
-          yNail2ThreadPosition(pinB, pinBClockwise));
+          xNail2ThreadPosition(nailA, nailAClockwise), 
+          yNail2ThreadPosition(nailA, nailAClockwise), 
+          xNail2ThreadPosition(nailB, nailBClockwise), 
+          yNail2ThreadPosition(nailB, nailBClockwise));
       
     } finally {
       if (graphics2D!=null) graphics2D.dispose();
@@ -223,10 +210,10 @@ public class EdgeFactory {
    */
   private int xNail2ThreadPosition(int nailIndex, boolean clockwise) {
     double imgCenter = this.size.w / 2.0d;
-    double pinDeviation = 2.0d*Math.PI*nailIndex/this.totalNumberOfNails;
-    double wayDeviation = (double)this.pinPxRadiusInt/this.size.w;
+    double nailDeviation = 2.0d*Math.PI*nailIndex/this.totalNumberOfNails;
+    double wayDeviation = (double)this.nailPxRadiusInt/this.size.w;
     double way = clockwise ? -1.0d : 1.0d;
-    return (int)((1 + Math.sin(pinDeviation + way * wayDeviation)) * imgCenter);
+    return (int)((1 + Math.sin(nailDeviation + way * wayDeviation)) * imgCenter);
   }
 
 
@@ -240,10 +227,10 @@ public class EdgeFactory {
    */
   private int yNail2ThreadPosition(int nailIndex, boolean clockwise) {
     double imgCenter = this.size.h / 2.0d;
-    double pinDeviation = 2.0d*Math.PI*nailIndex/this.totalNumberOfNails;
-    double wayDeviation = (double)this.pinPxRadiusInt/this.size.h;
+    double nailDeviation = 2.0d*Math.PI*nailIndex/this.totalNumberOfNails;
+    double wayDeviation = (double)this.nailPxRadiusInt/this.size.h;
     double way = clockwise ? -1.0d : 1.0d;
-    return (int)((1 - Math.cos(pinDeviation + way * wayDeviation)) * imgCenter);
+    return (int)((1 - Math.cos(nailDeviation + way * wayDeviation)) * imgCenter);
   }
   
   
@@ -257,7 +244,7 @@ public class EdgeFactory {
    *    
    * @return a compressed array.
    */
-  byte[] compressDrawnEdgeData(byte[] drawnEdgeImage) {
+  public byte[] compressDrawnEdgeData(byte[] drawnEdgeImage) {
     if (drawnEdgeImage.length<=0) 
       throw new RuntimeException("invalid image: size is 0");
     
@@ -280,5 +267,4 @@ public class EdgeFactory {
     byte[] bytes = baos.toByteArray();
     return bytes; 
   }
-  
 }

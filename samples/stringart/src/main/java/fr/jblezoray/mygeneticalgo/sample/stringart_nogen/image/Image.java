@@ -1,11 +1,6 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.stream.IntStream;
-
-import javax.imageio.ImageIO;
 
 public interface Image {
 
@@ -13,20 +8,6 @@ public interface Image {
   
   ImageSize getSize();
   
-
-  default BufferedImage toBufferedImage() {
-    ImageSize size = getSize();
-    byte[] bytes = asByteImage().getBytes();
-    BufferedImage result = new BufferedImage(
-        size.w, size.h, BufferedImage.TYPE_BYTE_GRAY);
-    result.getRaster().setDataElements(0, 0, size.w, size.h, bytes);
-    return result;
-  }
-  
-  default void writeToFile(File f) throws IOException {
-    BufferedImage res = toBufferedImage();
-    ImageIO.write(res, "png", f);
-  }
 
   /**
    * Pixel to pixel difference.

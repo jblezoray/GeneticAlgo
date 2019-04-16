@@ -1,12 +1,14 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge;
 
+import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeDrawer;
+
 public class Edge {
 
-  private final int pinA;
-  private final boolean pinAClockwise;
-  private final int pinB;
-  private final boolean pinBClockwise;
-  private final EdgeFactory factory;
+  private final int nailA;
+  private final boolean nailAClockwise;
+  private final int nailB;
+  private final boolean nailBClockwise;
+  private final EdgeDrawer edgeDrawer;
   
   /**
    * This value is lazily constructed. 
@@ -14,32 +16,32 @@ public class Edge {
   private byte[] compressedDrawnEdgeData;
   
 
-  Edge(int pinA, boolean pinAClockwise, 
-      int pinB, boolean pinBClockwise, 
-      EdgeFactory factory) {
-    if (pinA == pinB) 
-      throw new RuntimeException("cannot draw an edge if the two pins are identical");
-    this.pinA = pinA;
-    this.pinAClockwise = pinAClockwise;
-    this.pinB = pinB;
-    this.pinBClockwise = pinBClockwise;
-    this.factory = factory;
+  public Edge(int nailA, boolean nailAClockwise, 
+      int nailB, boolean nailBClockwise, 
+      EdgeDrawer edgeDrawer) {
+    if (nailA == nailB) 
+      throw new RuntimeException("cannot draw an edge if the two nails are identical");
+    this.nailA = nailA;
+    this.nailAClockwise = nailAClockwise;
+    this.nailB = nailB;
+    this.nailBClockwise = nailBClockwise;
+    this.edgeDrawer = edgeDrawer;
   }
   
-  public int getPinA() {
-    return pinA;
+  public int getNailA() {
+    return nailA;
   }
   
-  public int getPinB() {
-    return pinB;
+  public int getNailB() {
+    return nailB;
   }
 
-  public boolean isPinAClockwise() {
-    return pinAClockwise;
+  public boolean isNailAClockwise() {
+    return nailAClockwise;
   }
   
-  public boolean isPinBClockwise() {
-    return pinBClockwise;
+  public boolean isNailBClockwise() {
+    return nailBClockwise;
   }
   
   public byte[] getCompressedDrawnEdgeData() {
@@ -47,9 +49,9 @@ public class Edge {
     if (compressedDrawnEdgeData==null) {
       synchronized (this) {
         if (compressedDrawnEdgeData==null) {
-          byte[] drawnEdge = this.factory.getDrawnEdge(
-              pinA, pinAClockwise, pinB, pinBClockwise);
-          this.compressedDrawnEdgeData = this.factory.compressDrawnEdgeData(
+          byte[] drawnEdge = this.edgeDrawer.getDrawnEdge(
+              nailA, nailAClockwise, nailB, nailBClockwise);
+          this.compressedDrawnEdgeData = this.edgeDrawer.compressDrawnEdgeData(
               drawnEdge); 
         }
       }
@@ -58,9 +60,9 @@ public class Edge {
     return compressedDrawnEdgeData;
   }
 
-  public boolean contains(int pin, boolean clockwise) {
-    return (this.pinA==pin && this.pinAClockwise == clockwise) 
-        || (this.pinB==pin && this.pinBClockwise == clockwise);
+  public boolean contains(int nail, boolean clockwise) {
+    return (this.nailA==nail && this.nailAClockwise == clockwise) 
+        || (this.nailB==nail && this.nailBClockwise == clockwise);
   }
   
 }
