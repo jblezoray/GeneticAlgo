@@ -3,6 +3,8 @@ package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge;
 public class ScoredEdge  {
   private final Edge edge;
   private final double norm;
+  private int numberOfEdgesEvaluated;
+  private long timeTook;
   
   public ScoredEdge(Edge edge, double norm) {
     this.edge = edge;
@@ -15,6 +17,22 @@ public class ScoredEdge  {
   
   public double getNorm() {
     return norm;
+  }
+
+  public void setNumberOfEdgesEvaluated(int numberOfEdgesEvaluated) {
+    this.numberOfEdgesEvaluated = numberOfEdgesEvaluated;
+  }
+  
+  public int getNumberOfEdgesEvaluated() {
+    return numberOfEdgesEvaluated;
+  }
+
+  public void setTimeTook(long timeTook) {
+    this.timeTook = timeTook;
+  }
+  
+  public long getTimeTook() {
+    return timeTook;
   }
   
 }

@@ -8,7 +8,7 @@ import java.util.Arrays;
  */
 public class UnboundedImage implements Image {
 
-  private final int[] unboundedBytes;
+  private final int[] unboundedBytes; // INDArray
   private final ImageSize size;
   private ByteImage clampedCopy;
 
@@ -18,7 +18,7 @@ public class UnboundedImage implements Image {
    */
   public UnboundedImage(ImageSize size) {
     this.size = size;
-    this.unboundedBytes = new int[this.size.nbPixels];
+    this.unboundedBytes = new int[this.size.nbPixels]; // Nd4j.zeros(size.asShape()).addi(0xFF);
     Arrays.fill(this.unboundedBytes, 0xFF);
   }
   
@@ -32,16 +32,12 @@ public class UnboundedImage implements Image {
    * @return
    */
   public UnboundedImage deepCopy() {
+//    return new UnboundedImage(this.size, this.unboundedBytes.dup());
     return new UnboundedImage(
         this.size, 
         Arrays.copyOf(this.unboundedBytes, this.unboundedBytes.length));
   }
   
-
-  public int[] getUnboundedBytes() {
-    this.clampedCopy = null;
-    return this.unboundedBytes;
-  }
   
   /** 
    * Clamps all unbounded ints in [0x00, 0xFF], and build a copy from it. 
@@ -66,6 +62,36 @@ public class UnboundedImage implements Image {
   @Override
   public ImageSize getSize() {
     return this.size;
+  }
+
+  /**
+   * perform a pixel to pixel addition of 'image' in this image.
+   * @param image
+   * @return itself.
+   */
+  public UnboundedImage add(ByteImage image){
+    this.clampedCopy = null;
+    byte[] data = image.getRawBytes();
+    for (int i=0; i<data.length; i++) {
+      int pixel = Byte.toUnsignedInt(data[i]);
+      this.unboundedBytes[i] += pixel - 0xFF;
+    }
+    return this;
+  }
+
+  /**
+   * perform a pixel to pixel deletion of 'image' from this image.
+   * @param image
+   * @return itself.
+   */
+  public UnboundedImage remove(ByteImage image){
+    this.clampedCopy = null;
+    byte[] data = image.getRawBytes();
+    for (int i=0; i<data.length; i++) {
+      int pixel = Byte.toUnsignedInt(data[i]);
+      this.unboundedBytes[i] -= pixel - 0xFF;
+    }
+    return this;
   }
 
 }

@@ -6,11 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.ByteArrayOutputStream;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.Edge;
+import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ByteImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.CompressedByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ImageSize;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.UnboundedImage;
 
 public class EdgeDrawer {
 
@@ -43,7 +42,7 @@ public class EdgeDrawer {
    * 
    * @param original
    */
-  public void drawAllNails(UnboundedImage original) {
+  public ByteImage drawAllNails() {
     
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
@@ -70,12 +69,7 @@ public class EdgeDrawer {
       if (graphics2D!=null) graphics2D.dispose();
     }
     byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-    
-    // add all the drawn nails in the original image. 
-    int[] bytes = original.getUnboundedBytes();
-    for (int i=0; i<bytes.length; i++) {
-      bytes[i] += Byte.toUnsignedInt(pixels[i]) - 0xFF;
-    }
+    return new ByteImage(size, pixels);
   }
   
   
@@ -102,63 +96,6 @@ public class EdgeDrawer {
 
   
   /**
-   * Take image 'img', and draw this edge in the image. 
-   * 
-   * When run on an edge for the first time, this method has an overhead due to 
-   * the initial computation of the image.  
-   * 
-   * @param img image to be modified 
-   * @param edge edge to draw.
-   * @return the img object. 
-   */
-  public UnboundedImage drawEdgeInImage(UnboundedImage img, Edge edge) {
-    int[] unboundedBytes = img.getUnboundedBytes();
-    int bytesIndex = 0;
-    byte[] data = edge.getCompressedDrawnEdgeData();
-    for (int i=0; i<data.length; i+=2) {
-      
-      int howManyPixel = Byte.toUnsignedInt(data[i]);
-      int pixel = Byte.toUnsignedInt(data[i+1]);
-      
-      // 0xFF is the identity transformation
-      if (pixel!=0xFF) {
-        for (int j=bytesIndex; j<bytesIndex+(howManyPixel); j++) {
-          unboundedBytes[j] += pixel - 0xFF;
-        }
-      }
-      bytesIndex += howManyPixel;
-    }
-    return img;
-  }
-  
-
-  /**
-   * Remove an edge from an image.
-   * 
-   * @param img image to be modified,  with the edge removed. 
-   * @param edge edge to remove. 
-   */
-  public void undrawEdgeInImage(UnboundedImage img, Edge edge) {
-    int[] unboundedBytes = img.getUnboundedBytes();
-    int bytesIndex = 0;
-    byte[] data = edge.getCompressedDrawnEdgeData();
-    for (int i=0; i<data.length; i+=2) {
-      
-      int howManyPixel = Byte.toUnsignedInt(data[i]);
-      int pixel = Byte.toUnsignedInt(data[i+1]);
-      
-      // 0xFF is the identity transformation
-      if (pixel!=0xFF) {
-        for (int j=bytesIndex; j<bytesIndex+(howManyPixel); j++) {
-          unboundedBytes[j] -= pixel - 0xFF;
-        }
-      }
-      bytesIndex += howManyPixel;
-    }
-  }
-  
-  
-  /**
    * Rendering of the image.
    * 
    * This method is slow.  
@@ -169,7 +106,7 @@ public class EdgeDrawer {
    * @param nailBClockwise
    * @return
    */
-  public byte[] getDrawnEdge(int nailA, boolean nailAClockwise, 
+  public CompressedByteImage getDrawnEdge(int nailA, boolean nailAClockwise, 
       int nailB, boolean nailBClockwise) {
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
@@ -196,7 +133,7 @@ public class EdgeDrawer {
     }
 
     byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-    return pixels;
+    return new CompressedByteImage(size, pixels);
   }
   
   
@@ -234,37 +171,4 @@ public class EdgeDrawer {
   }
   
   
-  /**
-   * The format returned will be an array of bytes having each odd byte being a
-   * numerator that indicates how many times the next byte must appear.
-   * 
-   * For instance: <code>03 AE 01 04 02 FF</code> encodes the byte array  
-   * <code>AE AE AE 04 FF FF</code>.  This method is efficient for compressing 
-   * arrays iif the byte array has a lots of repeating elements.   
-   *    
-   * @return a compressed array.
-   */
-  public byte[] compressDrawnEdgeData(byte[] drawnEdgeImage) {
-    if (drawnEdgeImage.length<=0) 
-      throw new RuntimeException("invalid image: size is 0");
-    
-    short prevPixel = (short)Byte.toUnsignedInt(drawnEdgeImage[0]);
-    short counter = 1;
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    for (int i=1; i<drawnEdgeImage.length; i++) {
-      short pixel = (short)Byte.toUnsignedInt(drawnEdgeImage[i]);
-      if (pixel==prevPixel && counter<0xFF) {
-        counter++;
-      } else {
-        baos.write(counter);
-        baos.write(prevPixel);
-        prevPixel = pixel;
-        counter = 1;
-      }
-    }
-    baos.write(counter);
-    baos.write(prevPixel);
-    byte[] bytes = baos.toByteArray();
-    return bytes; 
-  }
 }

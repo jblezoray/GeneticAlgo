@@ -47,7 +47,7 @@ public class EdgeImageIO {
    */
   public static void writeToFile(Image image, File f) throws IOException {
     ImageSize size = image.getSize();
-    byte[] bytes = image.asByteImage().getBytes();
+    byte[] bytes = image.asByteImage().getRawBytes();
     BufferedImage result = new BufferedImage(size.w, size.h, TYPE_BYTE_GRAY);
     result.getRaster().setDataElements(0, 0, size.w, size.h, bytes);
     

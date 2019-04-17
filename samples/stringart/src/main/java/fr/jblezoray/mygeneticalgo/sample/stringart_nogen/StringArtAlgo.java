@@ -2,6 +2,7 @@ package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -93,6 +94,7 @@ public class StringArtAlgo {
         new EdgeDrawer(size, nbNails, lineThicknessInPx, nailDiameterInPx);
     this.edgeFactory = new EdgeFactory(minNailsDiff, nbNails, this.edgeDrawer);
     this.edgeWayEnabled = false;
+    this.listeners = new HashSet<>();
   }
   
   
@@ -102,7 +104,7 @@ public class StringArtAlgo {
 
     // create an image that represents the result.
     UnboundedImage curImg = new UnboundedImage(this.size);
-    this.edgeDrawer.drawAllNails(curImg);
+    curImg.add(this.edgeDrawer.drawAllNails());
     
     // values from kept from the previous round. 
     double prevNorm = Float.MAX_VALUE;
@@ -115,18 +117,10 @@ public class StringArtAlgo {
     do {
       // search for the edge that, when added to 'curImg', results in the 
       // maximum reduction of the norm. 
-      long before = System.currentTimeMillis();
-      AtomicInteger numberOfEdges = new AtomicInteger();
-      scoredEdge = this.edgeFactory.getAllPossibleEdges().stream().parallel()
-          .filter(predicateForEdgesFromNail(prevNail, isPrevNailClockwise, edges))
-          .peek(edge -> numberOfEdges.incrementAndGet())
-          .map(edge -> getScoreIfAddedInImage(edge, curImg))
-          .min((a, b) -> a.getNorm()<b.getNorm() ? -1 : 1)
-          .orElseThrow(() -> new RuntimeException("Invalid state: no edge."));
-      long after = System.currentTimeMillis();
+      scoredEdge = getBestEdge(prevNail, isPrevNailClockwise, curImg, edges);
 
-      // store the new prev nail for the next round. 
-      this.edgeDrawer.drawEdgeInImage(curImg, scoredEdge.getEdge());
+      // store the new prev nail for the next round.
+      curImg.add(scoredEdge.getEdge().getDrawnEdgeData().asByteImage());
       edges.add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
       if (scoredEdge.getEdge().getNailA() == prevNail) {
@@ -141,14 +135,43 @@ public class StringArtAlgo {
       int it = iteration.incrementAndGet();
       for (IStringArtAlgoListener listener : this.listeners) {
         listener.notifyRoundResults(it, curImg, importanceMappingImg, refImg, 
-            scoredEdge, numberOfEdges, after-before);
+            scoredEdge);
       }
       
     } while (scoredEdge.getNorm()<=prevNorm); // stop if it does not reduces the norm.
   }
   
   
-  
+  /**
+   * Tries to add all the possible edges, and keep only the one that results in 
+   * a minimum score. 
+   *  
+   * @param prevNail
+   * @param isPrevNailClockwise
+   * @param curImg
+   * @param edges
+   * @return
+   */
+  private ScoredEdge getBestEdge(int prevNail, boolean isPrevNailClockwise, 
+      UnboundedImage curImg, List<Edge> edges) {
+    AtomicInteger numberOfEdges = new AtomicInteger();
+    long before = System.currentTimeMillis();
+    ScoredEdge scoredEdge = this.edgeFactory
+        .getAllPossibleEdges()
+        .stream()
+        .parallel()
+        .filter(predicateForEdgesFromNail(prevNail, isPrevNailClockwise, edges))
+        .map(edge -> getScoreIfAddedInImage(edge, curImg))
+        .peek(edge -> numberOfEdges.incrementAndGet())
+        .min((a, b) -> a.getNorm()<b.getNorm() ? -1 : 1)
+        .orElseThrow(() -> new RuntimeException("Invalid state: no edge."));
+    long after = System.currentTimeMillis();
+    scoredEdge.setNumberOfEdgesEvaluated(numberOfEdges.get());
+    scoredEdge.setTimeTook(after-before);
+    return scoredEdge;
+  }
+
+
   /**
    * Builds a predicate that filters to keep only the edges that start from a 
    * specific nail.
@@ -176,13 +199,16 @@ public class StringArtAlgo {
   
 
   /**
+   * Builds a score for this edge when added in an image.
    * 
    * @param edge the edge to add.
    * @param curImg the current image (will be left untouched)
    * @return The score of the resulting image if the edge is added.
    */
   private ScoredEdge getScoreIfAddedInImage(Edge edge, UnboundedImage curImg) {
-    double score = this.edgeDrawer.drawEdgeInImage(curImg.deepCopy(), edge)
+    double score = curImg
+        .deepCopy()
+        .add(edge.getDrawnEdgeData().asByteImage())
         .differenceWith(refImg)
         .multiplyWith(importanceMappingImg)
         .l2norm();

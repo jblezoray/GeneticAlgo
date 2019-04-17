@@ -2,7 +2,6 @@ package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeImageIO;
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.ScoredEdge;
@@ -36,8 +35,7 @@ public class Main {
       new IStringArtAlgoListener() {
         @Override
         public void notifyRoundResults(int iteration, Image curImg, 
-            Image importanceMappingImg, Image refImg, ScoredEdge scoredEdge, 
-            AtomicInteger counterOfEvaluatedEdges, long timeTookForThisRound) {
+            Image importanceMappingImg, Image refImg, ScoredEdge scoredEdge) {
           if (iteration%50 != 0) return;
           try {
             EdgeImageIO.writeToFile(curImg, new File("_rendering.png"));
@@ -57,20 +55,17 @@ public class Main {
       new IStringArtAlgoListener() {
         @Override
         public void notifyRoundResults(int iteration, Image curImg, 
-            Image importanceMappingImg, Image refImg, ScoredEdge scoredEdge, 
-            AtomicInteger counterOfEvaluatedEdges, long timeTookForThisRound) {
+            Image importanceMappingImg, Image refImg, ScoredEdge scoredEdge) {
           String line = String.format(
               "iteration:%d ; norm:%7.0f ; nails:%3d,%3d ; choose:%5dms (mean:%d*%2.3fms)",
               iteration,
               scoredEdge.getNorm(), 
               scoredEdge.getEdge().getNailA(), 
               scoredEdge.getEdge().getNailB(),
-              timeTookForThisRound, 
-              counterOfEvaluatedEdges.get(),
-              timeTookForThisRound / (float)counterOfEvaluatedEdges.get());
+              scoredEdge.getTimeTook(), 
+              scoredEdge.getNumberOfEdgesEvaluated(),
+              scoredEdge.getTimeTook() / (float)scoredEdge.getNumberOfEdgesEvaluated());
           System.out.println(line);
         }
       }; 
-
-  
 }

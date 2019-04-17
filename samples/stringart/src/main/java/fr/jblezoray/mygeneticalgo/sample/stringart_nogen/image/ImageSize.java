@@ -17,4 +17,8 @@ public class ImageSize {
     return o instanceof ImageSize && this.nbPixels==((ImageSize)o).nbPixels;
   }
 
+  public int[] asShape() {
+    return new int[]{w, h};
+  }
+  
 }

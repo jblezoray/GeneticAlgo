@@ -11,22 +11,22 @@ public class ByteImage implements Image {
   }
 
   public ByteImage deepCopy() {
+//    return new ByteImage(this.size, this.bytes.dup());
     return new ByteImage(this.size, this.bytes.clone());
   }
   
+  public byte[] getRawBytes() {
+    return bytes;
+  }
+
   @Override
   public ByteImage asByteImage() {
     return this;
-  }
-  
-  public byte[] getBytes() {
-    return bytes;
   }
   
   @Override
   public ImageSize getSize() {
     return this.size;
   }
-
 
 }

@@ -1,7 +1,5 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.ScoredEdge;
 import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.Image;
 
@@ -16,8 +14,6 @@ public interface IStringArtAlgoListener {
       Image curImg, 
       Image importanceMappingImg, 
       Image refImg, 
-      ScoredEdge scoredEdge, 
-      AtomicInteger counterOfEvaluatedEdges,
-      long timeTookForThisRound);
+      ScoredEdge scoredEdge);
   
 }

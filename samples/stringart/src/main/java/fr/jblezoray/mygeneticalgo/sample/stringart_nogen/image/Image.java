@@ -7,7 +7,6 @@ public interface Image {
   ByteImage asByteImage();
   
   ImageSize getSize();
-  
 
   /**
    * Pixel to pixel difference.
@@ -20,8 +19,8 @@ public interface Image {
     if (!size.equals(other.getSize()))
       throw new RuntimeException("Images do not have the same size.");
 
-    byte[] thisBytes = asByteImage().getBytes();
-    byte[] otherBytes = other.asByteImage().getBytes();
+    byte[] thisBytes = asByteImage().getRawBytes();
+    byte[] otherBytes = other.asByteImage().getRawBytes();
     byte[] diff = new byte[size.nbPixels];
     
     IntStream.range(0, size.nbPixels).parallel().forEach(i -> {
@@ -46,8 +45,8 @@ public interface Image {
     if (!size.equals(other.getSize()))
       throw new RuntimeException("Images do not have the same size.");
     
-    byte[] thisBytes = asByteImage().getBytes();
-    byte[] otherBytes = other.asByteImage().getBytes();
+    byte[] thisBytes = asByteImage().getRawBytes();
+    byte[] otherBytes = other.asByteImage().getRawBytes();
     byte[] output = new byte[size.nbPixels];
 
     IntStream.range(0, size.nbPixels).parallel().forEach(i -> {
@@ -74,10 +73,13 @@ public interface Image {
    */
   default double l2norm() {
     long sum = 0;
-    for (byte b : this.asByteImage().getBytes()) {
+    for (byte b : this.asByteImage().getRawBytes()) {
       int unsigned = Byte.toUnsignedInt(b);
       sum += unsigned * unsigned;
     }
     return Math.sqrt(sum);
   }
+  
+  
+
 }
