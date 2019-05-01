@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core;
+package fr.jblezoray.mygeneticalgo.sample.stringart.core;
 
 import static java.awt.image.BufferedImage.TYPE_BYTE_GRAY;
 
@@ -9,9 +9,9 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ByteImage;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.Image;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ImageSize;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 
 public class EdgeImageIO {
 

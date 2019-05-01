@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core;
+package fr.jblezoray.mygeneticalgo.sample.stringart.core;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -7,9 +7,10 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ByteImage;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.CompressedByteImage;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ImageSize;
+import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedByteImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 
 public class EdgeDrawer {
 
@@ -106,8 +107,7 @@ public class EdgeDrawer {
    * @param nailBClockwise
    * @return
    */
-  public CompressedByteImage getDrawnEdge(int nailA, boolean nailAClockwise, 
-      int nailB, boolean nailBClockwise) {
+  public CompressedByteImage drawEdge(Edge edge) {
     BufferedImage image = new BufferedImage(
         this.size.w, this.size.h, BufferedImage.TYPE_BYTE_GRAY);
     
@@ -123,10 +123,10 @@ public class EdgeDrawer {
       graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
       graphics2D.setStroke(new BasicStroke(this.lineThicknessInPx));
       graphics2D.drawLine(
-          xNail2ThreadPosition(nailA, nailAClockwise), 
-          yNail2ThreadPosition(nailA, nailAClockwise), 
-          xNail2ThreadPosition(nailB, nailBClockwise), 
-          yNail2ThreadPosition(nailB, nailBClockwise));
+          xNail2ThreadPosition(edge.getNailA(), edge.isNailAClockwise()), 
+          yNail2ThreadPosition(edge.getNailA(), edge.isNailAClockwise()), 
+          xNail2ThreadPosition(edge.getNailB(), edge.isNailBClockwise()), 
+          yNail2ThreadPosition(edge.getNailB(), edge.isNailBClockwise()));
       
     } finally {
       if (graphics2D!=null) graphics2D.dispose();

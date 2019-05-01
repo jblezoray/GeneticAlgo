@@ -1,7 +1,7 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge;
+package fr.jblezoray.mygeneticalgo.sample.stringart.edge;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeDrawer;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.CompressedByteImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeDrawer;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedByteImage;
 
 public class Edge {
 
@@ -14,7 +14,7 @@ public class Edge {
   /**
    * This value is lazily constructed. 
    */
-  private CompressedByteImage compressedDrawnEdgeData;
+  private CompressedByteImage imageData;
   
 
   public Edge(int nailA, boolean nailAClockwise, 
@@ -47,16 +47,15 @@ public class Edge {
   
   public CompressedByteImage getDrawnEdgeData() {
     // lazy initialization.
-    if (compressedDrawnEdgeData==null) {
+    if (imageData==null) {
       synchronized (this) {
-        if (compressedDrawnEdgeData==null) {
-          this.compressedDrawnEdgeData = this.edgeDrawer.getDrawnEdge(
-              nailA, nailAClockwise, nailB, nailBClockwise);
+        if (imageData==null) {
+          this.imageData = this.edgeDrawer.drawEdge(this);
         }
       }
     }
       
-    return compressedDrawnEdgeData;
+    return imageData;
   }
 
   public boolean contains(int nail, boolean clockwise) {

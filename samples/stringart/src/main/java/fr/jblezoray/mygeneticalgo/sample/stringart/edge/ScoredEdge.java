@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge;
+package fr.jblezoray.mygeneticalgo.sample.stringart.edge;
 
 public class ScoredEdge  {
   private final Edge edge;

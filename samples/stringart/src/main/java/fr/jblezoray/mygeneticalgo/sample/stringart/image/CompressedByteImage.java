@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image;
+package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 
 import java.io.ByteArrayOutputStream;
 
@@ -29,11 +29,11 @@ public class CompressedByteImage implements Image {
     if (imageBytes.length<=0) 
       throw new RuntimeException("invalid image: size is 0");
     
-    short prevPixel = (short)Byte.toUnsignedInt(imageBytes[0]);
+    int prevPixel = Byte.toUnsignedInt(imageBytes[0]);
     short counter = 1;
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     for (int i=1; i<imageBytes.length; i++) {
-      short pixel = (short)Byte.toUnsignedInt(imageBytes[i]);
+      int pixel = Byte.toUnsignedInt(imageBytes[i]);
       if (pixel==prevPixel && counter<0xFF) {
         counter++;
       } else {
@@ -45,11 +45,9 @@ public class CompressedByteImage implements Image {
     }
     baos.write(counter);
     baos.write(prevPixel);
-    byte[] bytes = baos.toByteArray();
-    return bytes; 
+    return baos.toByteArray(); 
   }
   
-
   @Override
   public ImageSize getSize() {
     return this.size;

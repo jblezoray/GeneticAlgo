@@ -25,8 +25,9 @@ public class EasyListCrossover {
    * @param in2 the 2nd list to crossover. 
    * @param out1 pass an empty list in this parameter. 
    * @param out2 pass an empty list in this parameter. 
+   * @return indexes of the crossover points.
    */
-  public static <A> void doCrossover( 
+  public static <A> List<Integer> doCrossover( 
       int min, int max,
       List<A> in1, List<A> in2, 
       List<A> out1, List<A> out2) {
@@ -37,7 +38,6 @@ public class EasyListCrossover {
     // output lists must be clean.
     out1.clear();
     out2.clear();
-    
     
     // build a list of random crossover points. 
     List<Integer> crossoversList = new ArrayList<Integer>();
@@ -64,7 +64,8 @@ public class EasyListCrossover {
         if (in2.size()>i) out2.add(i, in2.get(i));
       }
     }
+    
+    return crossoversList;
   }
-  
   
 }

@@ -3,21 +3,12 @@ package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
 import java.io.File;
 import java.io.IOException;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeImageIO;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.ScoredEdge;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.Image;
+import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
+import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.*;
+import fr.jblezoray.mygeneticalgo.sample.stringart.edge.ScoredEdge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 
 public class Main {
-
-  private static final String GOAL_IMAGE_PATH = "test2/einstein.png";
-  private static final String FEATURES_IMAGE_PATH = "test2/einstein_features2.png";
-  private static final boolean EDGE_WAY_ENABLED = false;
-  private static final float CANVAS_WIDTH_MILLIMETERS = 630.0f;
-  private static final float THREAD_THICKNESS_MILLIMETERS = 0.15f; 
-  private static final float PIN_DIAMETER_MILLIMETERS = 2.0f;
-  private static final int NB_NAILS = 200;
-  private static final int MIN_NAILS_DIFF = Math.max(1, (int)NB_NAILS/20);
-
   
   public static void main(String[] args) throws IOException {
     StringArtAlgo stringArtAlgo = new StringArtAlgo(GOAL_IMAGE_PATH, 

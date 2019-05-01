@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image;
+package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 
 import java.util.stream.IntStream;
 

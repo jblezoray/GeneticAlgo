@@ -6,16 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeDrawer;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeFactory;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.core.EdgeImageIO;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.Edge;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.ScoredEdge;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.Image;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.ImageSize;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.UnboundedImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeDrawer;
+import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
+import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
+import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.edge.ScoredEdge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
 public class StringArtAlgo {
 
@@ -57,11 +56,6 @@ public class StringArtAlgo {
   private Set<IStringArtAlgoListener> listeners;
   
   /**
-   * If enabled, then the way a thread turns around a nail is considered. 
-   */
-  private boolean edgeWayEnabled;
-  
-  /**
    * 
    * @param refImage
    * @param importanceMappingImg
@@ -92,8 +86,8 @@ public class StringArtAlgo {
     float nailDiameterInPx = nailDiameterMilimeters / resolutionMmPerPx;
     this.edgeDrawer = 
         new EdgeDrawer(size, nbNails, lineThicknessInPx, nailDiameterInPx);
-    this.edgeFactory = new EdgeFactory(minNailsDiff, nbNails, this.edgeDrawer);
-    this.edgeWayEnabled = false;
+    this.edgeFactory = new EdgeFactory(minNailsDiff, nbNails, edgeWayEnabled, 
+        this.edgeDrawer);
     this.listeners = new HashSet<>();
   }
   
@@ -120,7 +114,7 @@ public class StringArtAlgo {
       scoredEdge = getBestEdge(prevNail, isPrevNailClockwise, curImg, edges);
 
       // store the new prev nail for the next round.
-      curImg.add(scoredEdge.getEdge().getDrawnEdgeData().asByteImage());
+      curImg.add(scoredEdge.getEdge().getDrawnEdgeData());
       edges.add(scoredEdge.getEdge());
       prevNorm = scoredEdge.getNorm();
       if (scoredEdge.getEdge().getNailA() == prevNail) {
@@ -157,10 +151,8 @@ public class StringArtAlgo {
     AtomicInteger numberOfEdges = new AtomicInteger();
     long before = System.currentTimeMillis();
     ScoredEdge scoredEdge = this.edgeFactory
-        .getAllPossibleEdges()
-        .stream()
-        .parallel()
-        .filter(predicateForEdgesFromNail(prevNail, isPrevNailClockwise, edges))
+        .streamEdges(prevNail, !isPrevNailClockwise)
+        .filter(edge -> !edges.contains(edge)) // not already in the image
         .map(edge -> getScoreIfAddedInImage(edge, curImg))
         .peek(edge -> numberOfEdges.incrementAndGet())
         .min((a, b) -> a.getNorm()<b.getNorm() ? -1 : 1)
@@ -173,32 +165,6 @@ public class StringArtAlgo {
 
 
   /**
-   * Builds a predicate that filters to keep only the edges that start from a 
-   * specific nail.
-   *  
-   *  If an edge is already in the image, it does not pass this filter.  
-   *  
-   *  If the 'edgeWayEnabled' boolean option is not setted to true, then only 
-   *  the edges that goes clockwise are kept.  Otherwise, the predicates 
-   *  considers that the string has make a 'turn' around the nail, and therefore
-   *  arises at the other side.
-   *  
-   * @param nail  number of the start nail.
-   * @param isNailClockwise if the previous edge was on the 'clockwise' side of 
-   *        the nail.  
-   * @param edgesInImage  the list of all the edges currently in the image.
-   * @return
-   */
-  private Predicate<Edge> predicateForEdgesFromNail(
-      int nail, boolean isNailClockwise, List<Edge> edgesInImage) {
-    boolean clockwise = edgeWayEnabled ? !isNailClockwise : false;
-    return edge -> edge.contains(nail, clockwise)
-        && (edgeWayEnabled||edge.isNailAClockwise()==edge.isNailBClockwise())
-        && !edgesInImage.contains(edge);
-  }
-  
-
-  /**
    * Builds a score for this edge when added in an image.
    * 
    * @param edge the edge to add.
@@ -208,7 +174,7 @@ public class StringArtAlgo {
   private ScoredEdge getScoreIfAddedInImage(Edge edge, UnboundedImage curImg) {
     double score = curImg
         .deepCopy()
-        .add(edge.getDrawnEdgeData().asByteImage())
+        .add(edge.getDrawnEdgeData())
         .differenceWith(refImg)
         .multiplyWith(importanceMappingImg)
         .l2norm();

@@ -1,7 +1,7 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.edge.ScoredEdge;
-import fr.jblezoray.mygeneticalgo.sample.stringart_nogen.image.Image;
+import fr.jblezoray.mygeneticalgo.sample.stringart.edge.ScoredEdge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 
 /**
  * This listener is invoked after each round.
