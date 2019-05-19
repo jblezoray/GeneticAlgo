@@ -11,6 +11,7 @@ import fr.jblezoray.mygeneticalgo.utils.RandomSingleton;
 
 public class StringPathDNA extends AbstractDNA {
 
+
   private static Random RANDOM = RandomSingleton.instance();
 
   private List<StringPathBase> bases;
@@ -27,7 +28,7 @@ public class StringPathDNA extends AbstractDNA {
     this.factory = factory;
     
   }
-
+  
   public int getSize() {
     return bases.size();
   }
@@ -43,7 +44,7 @@ public class StringPathDNA extends AbstractDNA {
     for (int i=0; i<nbMutations; i++) {
       int dnaLength = this.bases.size(); // size may have changed.
       int mutationIndex = RANDOM.nextInt(dnaLength);
-      switch(RANDOM.nextInt(4)) {
+      switch(RANDOM.nextInt(this.factory.isEdgeWayEnabled() ? 4 : 3)) {
       case 0: 
         addNail(mutationIndex); break;
       case 1: 
@@ -60,7 +61,7 @@ public class StringPathDNA extends AbstractDNA {
 
   private void mutateNail(int mutationIndex) {
     do {
-      this.bases.get(mutationIndex).setNail(RANDOM.nextInt(Constants.NB_NAILS));
+      this.bases.get(mutationIndex).setNail(RANDOM.nextInt(this.factory.getNbNails()));
     } while (!this.factory.isNailValueValid(this.bases, mutationIndex));
   }
   
@@ -81,8 +82,10 @@ public class StringPathDNA extends AbstractDNA {
 
   void addNail(int mutationIndex) {
     // add node. 
-    StringPathBase b = new StringPathBase(
-        RANDOM.nextInt(Constants.NB_NAILS), RANDOM.nextBoolean());
+    int nail = RANDOM.nextInt(this.factory.getNbNails());
+    boolean way = this.factory.isEdgeWayEnabled() ? 
+        RANDOM.nextBoolean() : this.factory.getDefaultEdgeWay();
+    StringPathBase b = new StringPathBase(nail, way);
     this.bases.add(mutationIndex, b);
     // mutate it until is has a valid value.
     if (!this.factory.isNailValueValid(this.bases, mutationIndex))

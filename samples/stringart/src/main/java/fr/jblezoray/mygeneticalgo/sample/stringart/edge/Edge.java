@@ -1,5 +1,8 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart.edge;
 
+import java.util.Comparator;
+import java.util.Objects;
+
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeDrawer;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedByteImage;
 
@@ -17,15 +20,25 @@ public class Edge {
   private CompressedByteImage imageData;
   
 
-  public Edge(int nailA, boolean nailAClockwise, 
+  public Edge(
+      int nailA, boolean nailAClockwise, 
       int nailB, boolean nailBClockwise, 
       EdgeDrawer edgeDrawer) {
-    if (nailA == nailB) 
+    if (nailA == nailB) { 
       throw new RuntimeException("cannot draw an edge if the two nails are identical");
-    this.nailA = nailA;
-    this.nailAClockwise = nailAClockwise;
-    this.nailB = nailB;
-    this.nailBClockwise = nailBClockwise;
+    }
+    // NailA is always the smallest.
+    if (nailA < nailB) {
+      this.nailA = nailA;
+      this.nailAClockwise = nailAClockwise;
+      this.nailB = nailB;
+      this.nailBClockwise = nailBClockwise;
+    } else {
+      this.nailA = nailB;
+      this.nailAClockwise = nailBClockwise;
+      this.nailB = nailA;
+      this.nailBClockwise = nailAClockwise;
+    }
     this.edgeDrawer = edgeDrawer;
   }
   
@@ -61,6 +74,30 @@ public class Edge {
   public boolean contains(int nail, boolean clockwise) {
     return (this.nailA==nail && this.nailAClockwise == clockwise) 
         || (this.nailB==nail && this.nailBClockwise == clockwise);
+  }
+
+  
+  public final static Comparator<Edge> COMPARATOR = (e1, e2) ->
+        (e1.getNailA() != e2.getNailA()) ? e1.getNailA() - e2.getNailA() : 
+        (e1.getNailB() != e2.getNailB()) ? e1.getNailB() - e2.getNailB() : 
+        (e1.isNailAClockwise() == e2.isNailAClockwise() && e1.isNailBClockwise() == e2.isNailBClockwise()) ? 0 : 
+        1;
+        
+  @Override
+  public boolean equals(Object o) {
+    return (o instanceof Edge) && 0==COMPARATOR.compare(this, (Edge)o);
+  }
+  
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(this);
+  }
+  
+  @Override
+  public String toString() {
+    return "["
+        +this.nailA+(this.nailAClockwise?'+':'-')+","
+        +this.nailB+(this.nailBClockwise?'+':'-')+"]";
   }
   
 }

@@ -9,10 +9,14 @@ import java.util.Random;
  */
 public class RandomSingleton {
 
-  private static final Random RANDOM = new Random(System.currentTimeMillis());
+  private static Random RANDOM = new Random(System.currentTimeMillis());
   
   public static Random instance() {
     return RANDOM;
+  }
+  
+  public static void setDeterministic() {
+    RANDOM = new Random(0);
   }
   
 }

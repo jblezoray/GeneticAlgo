@@ -29,4 +29,10 @@ public class StringPathBase {
   public boolean isTurnClockwise() {
     return turnClockwise;
   }
+  
+  @Override
+  public String toString() {
+    return Integer.toString(this.nail) + (this.turnClockwise ? '+' : '-');
+  }
+  
 }

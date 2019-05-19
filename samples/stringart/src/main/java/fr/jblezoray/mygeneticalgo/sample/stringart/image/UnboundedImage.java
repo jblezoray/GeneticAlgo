@@ -10,6 +10,12 @@ public class UnboundedImage implements Image {
 
   private final int[] unboundedBytes;
   private final ImageSize size;
+  
+  /**
+   * A cached rendering of the 'unboundedBytes' as a ByteImage.
+   * 
+   * This field MUST be reseted to null whenever unboundedBytes is modified.
+   */
   private ByteImage clampedCopy;
 
   /** 
@@ -124,6 +130,20 @@ public class UnboundedImage implements Image {
       if (pixel!=0xFF) {
         this.unboundedBytes[i] += pixel - 0xFF;
       }
+    }
+    return this;
+  }
+
+
+  /**
+   * perform a pixel to pixel addition of 'image' in this image.
+   * @param image
+   * @return itself.
+   */
+  public UnboundedImage add(UnboundedImage image) {
+    this.clampedCopy = null;
+    for (int i=0; i<image.unboundedBytes.length; i++) {
+      this.unboundedBytes[i] += image.unboundedBytes[i] - 0xFF; 
     }
     return this;
   }

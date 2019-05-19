@@ -61,6 +61,7 @@ public class StringArtAlgo {
    * @param importanceMappingImg
    * @param edgeWayEnabled disable to get faster processing, enable to lessen 
    *        the moiré effect.
+   * @param defaultEdgeWay edge way if edgeWayEnabled is false.
    * @param canvasWidthMilimeters
    * @param threadThicknessMilimeters
    * @param nailDiameterMilimeters
@@ -72,6 +73,7 @@ public class StringArtAlgo {
       String refImage, 
       String importanceMappingImg, 
       boolean edgeWayEnabled, 
+      boolean defaultEdgeWay, 
       float canvasWidthMilimeters,
       float threadThicknessMilimeters,
       float nailDiameterMilimeters,
@@ -87,7 +89,7 @@ public class StringArtAlgo {
     this.edgeDrawer = 
         new EdgeDrawer(size, nbNails, lineThicknessInPx, nailDiameterInPx);
     this.edgeFactory = new EdgeFactory(minNailsDiff, nbNails, edgeWayEnabled, 
-        this.edgeDrawer);
+        defaultEdgeWay, this.edgeDrawer);
     this.listeners = new HashSet<>();
   }
   

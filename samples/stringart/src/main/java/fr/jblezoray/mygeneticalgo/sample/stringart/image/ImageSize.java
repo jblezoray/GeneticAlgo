@@ -21,4 +21,9 @@ public class ImageSize {
     return new int[]{w, h};
   }
   
+  @Override
+  public String toString() {
+    return "["+w+','+h+']';
+  }
+  
 }

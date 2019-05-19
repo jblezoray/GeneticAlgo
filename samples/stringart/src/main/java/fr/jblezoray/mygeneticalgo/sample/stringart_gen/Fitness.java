@@ -10,9 +10,9 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
 public class Fitness implements IFitness<StringPathDNA> {
 
-  private final EdgeFactory edgeFactory; 
-  private final UnboundedImage refImg;
-  private final Image importanceMappingImg; 
+  protected final EdgeFactory edgeFactory; 
+  protected final UnboundedImage refImg;
+  protected final Image importanceMappingImg; 
   
   public Fitness(EdgeFactory edgeFactory,
                  UnboundedImage refImg,
@@ -29,10 +29,12 @@ public class Fitness implements IFitness<StringPathDNA> {
     UnboundedImage constructed = drawImage(candidateToEvaluate);
     
     // get fitness score.
-    return - (int) constructed
+    int l2Norm = (int) constructed
         .differenceWith(refImg)
         .multiplyWith(importanceMappingImg)
         .l2norm();
+    
+    return 1.0 / Math.sqrt(Math.sqrt(l2Norm));
   }
 
   public UnboundedImage drawImage(StringPathDNA candidateToEvaluate) {
@@ -47,7 +49,7 @@ public class Fitness implements IFitness<StringPathDNA> {
           prevBase.getNail(), prevBase.isTurnClockwise(), 
           curBase.getNail(),  curBase.isTurnClockwise());
       if (!oe.isPresent()) 
-        throw new RuntimeException("no edge matched between nail "+prevBase.getNail()+" and nail "+curBase.getNail()+"!");
+        throw new RuntimeException("no edge matched between nail "+prevBase+" and nail "+curBase+"!");
       Edge edge = oe.get();
       constructed.add(edge.getDrawnEdgeData());
 

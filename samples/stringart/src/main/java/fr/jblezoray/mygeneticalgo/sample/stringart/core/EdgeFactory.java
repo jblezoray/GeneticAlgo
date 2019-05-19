@@ -13,7 +13,8 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
 public class EdgeFactory {
   
   private final List<Edge> allPossibleEdges;
-  private final boolean edgeWayEnabled;
+  private final boolean wayEnabled;
+  private final boolean defaultWay;
   
   /**
    * 
@@ -25,37 +26,42 @@ public class EdgeFactory {
    * 
    * @param minNailDiff
    * @param totalNumberOfNails
-   * @param edgeWayEnabled If enabled, then the way a thread turns around a nail
+   * @param wayEnabled If enabled, then the way a thread turns around a nail
    *  is considered.
+   * @param defaultWay way value if wayEnabled is false.
    * @param drawer
    */
   public EdgeFactory(
       int minNailDiff, 
       int totalNumberOfNails, 
-      boolean edgeWayEnabled,
+      boolean wayEnabled,
+      boolean defaultWay,
       EdgeDrawer drawer) {
     this.allPossibleEdges = new ArrayList<>();
     for (int i=0; i<totalNumberOfNails; i++) {
       for (int j=i; j<totalNumberOfNails; j++) {
         if (Math.abs(j-i) > minNailDiff) {
           // one for each possible connection between two nails.
-          allPossibleEdges.add(new Edge(i, true,  j, true,  drawer));
-          if (edgeWayEnabled) {
+          if (wayEnabled) {
+            allPossibleEdges.add(new Edge(i, true,  j, true,  drawer));
             allPossibleEdges.add(new Edge(i, false, j, true,  drawer));
             allPossibleEdges.add(new Edge(i, true,  j, false, drawer));
             allPossibleEdges.add(new Edge(i, false, j, false, drawer));
+          } else {
+            allPossibleEdges.add(new Edge(i, defaultWay, j, defaultWay, drawer));
           }
         }
       }
     }
-    this.edgeWayEnabled = edgeWayEnabled;
+    this.wayEnabled = wayEnabled;
+    this.defaultWay = defaultWay;
   }
   
   public Stream<Edge> streamEdges(
       int nail, boolean nailClockwise) {
     return allPossibleEdges.stream()
         .parallel()
-        .filter(edge -> edge.contains(nail, !edgeWayEnabled||nailClockwise));
+        .filter(edge -> edge.contains(nail, this.wayEnabled ? nailClockwise : this.defaultWay));
   }
 
   public Optional<Edge> getEdge(
@@ -63,8 +69,8 @@ public class EdgeFactory {
       int nailB, boolean nailBClockwise) {
     return allPossibleEdges.stream()
         .parallel()
-        .filter(edge -> edge.contains(nailA, !edgeWayEnabled||nailAClockwise) 
-                     && edge.contains(nailB, !edgeWayEnabled||nailBClockwise))
+        .filter(edge -> edge.contains(nailA, this.wayEnabled ? nailAClockwise : this.defaultWay) 
+                     && edge.contains(nailB, this.wayEnabled ? nailBClockwise : this.defaultWay))
         .findFirst();
   }
   

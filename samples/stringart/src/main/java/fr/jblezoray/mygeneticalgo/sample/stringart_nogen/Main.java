@@ -12,9 +12,9 @@ public class Main {
   
   public static void main(String[] args) throws IOException {
     StringArtAlgo stringArtAlgo = new StringArtAlgo(GOAL_IMAGE_PATH, 
-        FEATURES_IMAGE_PATH, EDGE_WAY_ENABLED, CANVAS_WIDTH_MILLIMETERS,
-        THREAD_THICKNESS_MILLIMETERS, PIN_DIAMETER_MILLIMETERS, NB_NAILS,
-        MIN_NAILS_DIFF);
+        FEATURES_IMAGE_PATH, EDGE_WAY_ENABLED, DEFAULT_EDGE_WAY, 
+        CANVAS_WIDTH_MILLIMETERS, THREAD_THICKNESS_MILLIMETERS, 
+        PIN_DIAMETER_MILLIMETERS, NB_NAILS, MIN_NAILS_DIFF);
     stringArtAlgo.addListener(SYSTEM_OUT_PRINTER_LISTENER);
     stringArtAlgo.addListener(IMAGE_SAVER_LISTENER);
     stringArtAlgo.start();
