@@ -1,5 +1,11 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 
+import static java.awt.image.BufferedImage.TYPE_BYTE_GRAY;
+
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.util.stream.IntStream;
 
 public interface Image {
@@ -80,6 +86,30 @@ public interface Image {
     return Math.sqrt(sum);
   }
   
-  
+
+
+  default ByteImage downsample(double d) {
+    ImageSize size = this.getSize();
+    byte[] bytes = this.asByteImage().getRawBytes();
+    BufferedImage result = new BufferedImage(size.w, size.h, TYPE_BYTE_GRAY);
+    result.getRaster().setDataElements(0, 0, size.w, size.h, bytes);
+
+    int newW = new Double(size.w*d).intValue();
+    int newH = new Double(size.h*d).intValue();
+    
+    BufferedImage newImage = new BufferedImage(newW, newH, TYPE_BYTE_GRAY);
+    Graphics2D g = newImage.createGraphics();
+    try {
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.drawImage(result, 0, 0, newW, newH, null);
+    } finally {
+        g.dispose();
+    }
+
+    byte[] newBytes = ((DataBufferByte) newImage.getRaster().getDataBuffer()).getData();
+    return new ByteImage(new ImageSize(newW, newH), newBytes);
+  }
+
 
 }

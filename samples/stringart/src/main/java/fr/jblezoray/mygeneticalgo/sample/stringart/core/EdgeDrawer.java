@@ -28,10 +28,10 @@ public class EdgeDrawer {
   private final int nailPxRadiusInt;
   
   public EdgeDrawer(ImageSize size, int totalNumberOfNails, 
-      float lineThickness, float nailDiameterInPx) {
+      float lineThicknessInPx, float nailDiameterInPx) {
     this.size = size;
     this.totalNumberOfNails = totalNumberOfNails; 
-    this.lineThicknessInPx = lineThickness;
+    this.lineThicknessInPx = lineThicknessInPx;
     this.nailPxRadiusInt = Math.max(1, (int)nailDiameterInPx);
   }
   

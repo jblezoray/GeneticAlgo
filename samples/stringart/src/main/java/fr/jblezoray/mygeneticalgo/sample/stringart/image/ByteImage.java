@@ -1,5 +1,11 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 
+import static java.awt.image.BufferedImage.TYPE_BYTE_GRAY;
+
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+
 public class ByteImage implements Image {
 
   private final byte[] bytes;
@@ -11,7 +17,6 @@ public class ByteImage implements Image {
   }
 
   public ByteImage deepCopy() {
-//    return new ByteImage(this.size, this.bytes.dup());
     return new ByteImage(this.size, this.bytes.clone());
   }
   
@@ -28,5 +33,4 @@ public class ByteImage implements Image {
   public ImageSize getSize() {
     return this.size;
   }
-
 }

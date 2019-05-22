@@ -1,5 +1,6 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
 
+import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.CANVAS_WIDTH_MILLIMETERS;
 import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.DEFAULT_EDGE_WAY;
 import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.EDGE_WAY_ENABLED;
 import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.FEATURES_IMAGE_PATH;
@@ -31,14 +32,21 @@ public class Main {
   
   public static void main(String[] args) throws IOException {
     
-    int nbIndividuals = 50;
+    int nbIndividuals = 100;
     
     ByteImage refImg = EdgeImageIO.readFile(GOAL_IMAGE_PATH);
+//    refImg = refImg.downsample(0.10);
     ImageSize refImgSize = refImg.getSize();
     UnboundedImage refImgUnbounded = new UnboundedImage(refImgSize).add(refImg);
+    
     ByteImage impImg = EdgeImageIO.readFile(FEATURES_IMAGE_PATH);
+//    impImg = impImg.downsample(0.10);
+    
+    float resolutionMmPerPx = CANVAS_WIDTH_MILLIMETERS / refImgSize.w;
+    float lineThicknessInPx = THREAD_THICKNESS_MILLIMETERS / resolutionMmPerPx;
+    float nailDiameterInPx = PIN_DIAMETER_MILLIMETERS / resolutionMmPerPx;
     EdgeDrawer edgeDrawer = new EdgeDrawer(refImgSize, NB_NAILS, 
-        THREAD_THICKNESS_MILLIMETERS, PIN_DIAMETER_MILLIMETERS);
+        lineThicknessInPx, nailDiameterInPx);
     EdgeFactory edgeFactory = new EdgeFactory(MIN_NAILS_DIFF, NB_NAILS, 
         EDGE_WAY_ENABLED, DEFAULT_EDGE_WAY, edgeDrawer); 
     Fitness fitness = 
@@ -53,8 +61,10 @@ public class Main {
         selection, nbIndividuals);
     ga.addListener(new StatsListener<StringPathDNA>(System.out, 1));
     ga.addListener(new FitnessRepartitionTextPloterListener<StringPathDNA>(System.out, 10, 80, 5));
-    ga.addListener(new ImagePrintListener(fitness, edgeDrawer, 1));
+    ga.addListener(new ImagePrintListener(fitness, edgeDrawer, 10));
 //    ga.addListener(new FitnessHistoryGraphicalPloter<>());
+    ga.setCrossoversRange(1, 1);
+    ga.setMutationRate(0.02f);
     while (true)
       ga.evolve();
     
