@@ -98,9 +98,9 @@ public class Edge {
   
   @Override
   public String toString() {
-    return "["
+    return "("
         +this.nailA+(this.nailAClockwise?'+':'-')+","
-        +this.nailB+(this.nailBClockwise?'+':'-')+"]";
+        +this.nailB+(this.nailBClockwise?'+':'-')+")";
   }
   
 }

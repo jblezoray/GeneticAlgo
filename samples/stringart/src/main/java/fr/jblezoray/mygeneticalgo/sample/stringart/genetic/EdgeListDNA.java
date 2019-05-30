@@ -60,14 +60,28 @@ public class EdgeListDNA extends AbstractDNA {
     Optional<EnhancedEdge> oee = this.resolveEdge(0);
     while (oee.isPresent()) {
       EnhancedEdge ee = oee.get();
-      sb.append('(')
-          .append(ee.getStartNail())
+      sb.append(ee.getStartNail())
           .append(ee.getStartNailWay() ? '+' : '-')
-          .append(',')
-          .append(ee.getEndNail())
-          .append(ee.getEndNailWay() ? '+' : '-')
-          .append(')');
+          .append(',');
       oee = ee.getNext();
+      if (!oee.isPresent()) {
+        sb.append(ee.getEndNail())
+            .append(ee.getEndNailWay() ? '+' : '-');
+      }
+    }
+    return sb.append("]").toString();
+  }
+  
+  String toStringDebug() {
+    StringBuilder sb = new StringBuilder("[");
+    for (Edge e : this.bases) {
+      sb.append('(')
+          .append(e.getNailA())
+          .append(e.isNailAClockwise() ? '+' : '-')
+          .append(',')
+          .append(e.getNailB())
+          .append(e.isNailBClockwise() ? '+' : '-')
+          .append(')');
     }
     return sb.append("]").toString();
   }
@@ -99,6 +113,29 @@ public class EdgeListDNA extends AbstractDNA {
         ? Optional.empty() 
         : Optional.of(new EnhancedEdge(this.bases.get(index), index));
   }
+
+  private static int findCommonNail(Edge e1, Edge e2) {
+    int commonNail =  
+        e1.getNailA() == e2.getNailA() ? e1.getNailA() :
+        e1.getNailA() == e2.getNailB() ? e1.getNailA() : 
+        e1.getNailB() == e2.getNailA() ? e1.getNailB() : 
+        e1.getNailB() == e2.getNailB() ? e1.getNailB() :
+        -1;
+    if (commonNail==-1) 
+      throw new RuntimeException("No common nail between "+e1+" and "+e2+" !");
+    return commonNail;
+  }
+  
+  private static int findDifferentNail(Edge fromEdge, Edge notInThisEdge) {
+    int commonNail = findCommonNail(fromEdge, notInThisEdge);
+    int differentNail = 
+        fromEdge.getNailA() == commonNail ? fromEdge.getNailB() : 
+        fromEdge.getNailB() == commonNail ? fromEdge.getNailA() :  
+        -1;
+    if (differentNail==-1)
+      throw new RuntimeException("No different nail !");
+    return differentNail;
+  }
   
   private class EnhancedEdge {
     private Edge edge;
@@ -108,29 +145,6 @@ public class EdgeListDNA extends AbstractDNA {
     EnhancedEdge(Edge edge, int index) {
       this.edge = edge;
       this.index = index;
-    }
-
-    private int findCommonNail(Edge e1, Edge e2) {
-      int commonNail =  
-          e1.getNailA() == e2.getNailA() ? e1.getNailA() :
-          e1.getNailA() == e2.getNailB() ? e1.getNailA() : 
-          e1.getNailB() == e2.getNailA() ? e1.getNailB() : 
-          e1.getNailB() == e2.getNailB() ? e1.getNailB() :
-          -1;
-      if (commonNail==-1) 
-        throw new RuntimeException("No common nail !");
-      return commonNail;
-    }
-    
-    private int findDifferentNail(Edge fromEdge, Edge notInThisEdge) {
-      int commonNail = findCommonNail(fromEdge, notInThisEdge);
-      int differentNail = 
-          fromEdge.getNailA() == commonNail ? fromEdge.getNailB() : 
-          fromEdge.getNailB() == commonNail ? fromEdge.getNailA() :  
-          -1;
-      if (differentNail==-1)
-        throw new RuntimeException("No different nail !");
-      return differentNail;
     }
     
     int getStartNail() {
@@ -201,7 +215,7 @@ public class EdgeListDNA extends AbstractDNA {
     
     boolean done = false;
     do {
-      // this nail will replace the end Nail.
+      // this nail will replace the end Nail of 'cur'.
       int newNail = randomNail();
       boolean newNailWay = randomWay();
       
@@ -210,7 +224,7 @@ public class EdgeListDNA extends AbstractDNA {
           .getEdge(cur.getStartNail(), cur.getStartNailWay(), newNail, newNailWay)
           .filter(r -> cur.getPrevious().map(p->p.edge!=r).orElse(true));
       if (curReplacement.isPresent()) {
-        // if there is a next, it must have a suitable replacement.
+        // if there is a next, it also must have a suitable replacement.
         if (oNext.isPresent()) {
           
           // we can't rely on 'next.getEndNail()'.  We have to find the common 
@@ -274,6 +288,7 @@ public class EdgeListDNA extends AbstractDNA {
     Optional<EnhancedEdge> oNext = cur.getNext(); 
     Optional<EnhancedEdge> oPrev = cur.getPrevious();
     if (!oNext.isPresent() || !oPrev.isPresent()) {
+      // removal at extremums is straightforward. 
       this.bases.remove(mutationIndex);
       
     } else {
@@ -283,10 +298,13 @@ public class EdgeListDNA extends AbstractDNA {
       int nail = cur.getStartNail();
       boolean way = cur.getStartNailWay();
       
-      // this avoids a blocking case.
+      // this avoids a blocking case.  We have an implementation constraint that
+      // forbids cases like A -> B -> A. This ensures that A -> B -> C -> A does
+      // not fall into this when C is removed. 
       while (oPrev.get().getStartNail() == oNext.get().getEndNail())
         mutateEdge(oNext.get().index);
       
+      // find x such as A -> x -> B is a valid path. 
       boolean done = false;
       Optional<Edge> oNewPrev, oNewNext;
       do {
@@ -373,9 +391,9 @@ public class EdgeListDNA extends AbstractDNA {
 
     List<Edge> out1 = new ArrayList<>();
     List<Edge> out2 = new ArrayList<>();
-    List<Integer> crossoverPoints = 
-        EasyListCrossover.<Edge>doCrossover(
-        minCrossovers, maxCrossovers, this.bases, ((EdgeListDNA)other).bases, 
+    List<Integer> crossoverPoints = EasyListCrossover.<Edge>doCrossover(
+        minCrossovers, maxCrossovers, 
+        this.bases, ((EdgeListDNA)other).bases, 
         out1, out2);
     this.bases = out1;
     ((EdgeListDNA)other).bases = out2;
