@@ -30,20 +30,14 @@ public class EdgeListDNATest {
   @Test
   public void test_crossover() {
     EdgeListDNA dna1 = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
-    for (int i=0; i<20; i++) dna1.addEdge(i);
+    for (int i=0; i<10; i++) dna1.addEdge(i);
     EdgeListDNA dna2 = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
-    for (int i=0; i<20; i++) dna2.addEdge(i);
+    for (int i=0; i<10; i++) dna2.addEdge(i);
     Assert.assertTrue(dna1.isValid());
     Assert.assertTrue(dna2.isValid());
     
-    System.out.println(dna1.toStringDebug());
-    System.out.println(dna2.toStringDebug());
-    System.out.println("go");
-    dna1.doDNACrossover(dna2, 2, 2);
-    System.out.println("done");
-    System.out.println(dna1.toStringDebug());
-    System.out.println(dna2.toStringDebug());
-
+    dna1.doDNACrossover(dna2, 2, 4);
+    
     Assert.assertTrue(dna1.isValid());
     Assert.assertTrue(dna2.isValid());
   }
@@ -53,30 +47,21 @@ public class EdgeListDNATest {
   public void test_mutateEdge() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<4; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-,19-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-,19-]", dna.toString());
     
     dna.mutateEdge(1);
 
-    Assert.assertEquals("[48-,60-,77-,91-,19-]", dna.toString());
+    Assert.assertEquals("[60-,48-,77-,91-,19-]", dna.toString());
   }
   
-
-  @Test(expected = RuntimeException.class)
-  public void test_mutateEdge_emptyList() {
-    EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
-    
-    dna.mutateEdge(0);
-  }
-  
-
   @Test
   public void test_mutateEdge_1st_element() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.mutateEdge(0);
-    Assert.assertEquals("[48-,61-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,77-,15-,91-]", dna.toString());
   }
   
 
@@ -84,11 +69,11 @@ public class EdgeListDNATest {
   public void test_mutateEdge_last_element() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.mutateEdge(2);
 
-    Assert.assertEquals("[48-,60-,47-,61-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,61-]", dna.toString());
   }
 
 
@@ -96,31 +81,32 @@ public class EdgeListDNATest {
   public void test_deleteEdge_1st_element() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.deleteEdge(0);
 
-    Assert.assertEquals("[60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[48-,15-,91-]", dna.toString());
   }
 
   @Test
   public void test_deleteEdge_last_element() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.deleteEdge(2);
-    Assert.assertEquals("[48-,60-,47-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-]", dna.toString());
   }
 
   @Test
   public void test_deleteEdge() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.deleteEdge(1);
-    Assert.assertEquals("[48-,60-,91-]", dna.toString());
+    
+    Assert.assertEquals("[60-,19-,91-]", dna.toString());
   }
 
   @Test
@@ -128,28 +114,30 @@ public class EdgeListDNATest {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
 
     dna.addEdge(0);
-    Assert.assertEquals("[48-,60-]", dna.toString());
+    
+    Assert.assertEquals("[60-,48-]", dna.toString());
   }
 
   @Test
   public void test_addEdge_first() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.addEdge(0);
-    Assert.assertEquals("[48-,19-,60-,47-,91-]", dna.toString());
+    
+    Assert.assertEquals("[60-,19-,48-,15-,91-]", dna.toString());
   }
 
   @Test
   public void test_addEdge_middle() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<2; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-]", dna.toString());
 
     dna.addEdge(1);
     
-    Assert.assertEquals("[48-,60-,91-,47-]", dna.toString());
+    Assert.assertEquals("[60-,48-,91-,15-]", dna.toString());
 
   }
 
@@ -157,11 +145,11 @@ public class EdgeListDNATest {
   public void test_addEdge_last() {
     EdgeListDNA dna = new EdgeListDNA(EDGE_FACTORY, 10, 100, false, false);
     for (int i=0; i<3; i++) dna.addEdge(i);
-    Assert.assertEquals("[48-,60-,47-,91-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-]", dna.toString());
     
     dna.addEdge(3);
     
-    Assert.assertEquals("[48-,60-,47-,91-,19-]", dna.toString());
+    Assert.assertEquals("[60-,48-,15-,91-,19-]", dna.toString());
   }
   
   
