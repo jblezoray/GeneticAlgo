@@ -19,7 +19,6 @@ public class Edge {
    */
   private CompressedByteImage imageData;
   
-
   public Edge(
       int nailA, boolean nailAClockwise, 
       int nailB, boolean nailBClockwise, 
@@ -69,6 +68,10 @@ public class Edge {
     }
       
     return imageData;
+  }
+
+  public boolean wayOf(int nail) {
+    return this.nailA == nail ? this.nailAClockwise : this.nailBClockwise;
   }
 
   public boolean contains(int nail, boolean clockwise) {

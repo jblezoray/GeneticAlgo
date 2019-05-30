@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.hillclimb;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.ScoredEdge;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;

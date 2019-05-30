@@ -12,6 +12,10 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 
+/**
+ * EdgeDrawer can render an Edge as an image (CompressedByteImage).
+ * @author jbl
+ */
 public class EdgeDrawer {
 
   private final ImageSize size;

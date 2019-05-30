@@ -6,17 +6,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
-public class FitnessOptimized extends Fitness {
+
+/**
+ * Can compute a fitness score from a StringPathDNA.
+ * 
+ * Bufferizes parts of rendered images to find a fast way to draw them.
+ *   
+ * @author jbl
+ */
+public class FitnessFast extends Fitness {
  
-  private final int maxBufferSize; 
   private LinkedList<GeneratedElement> buffer;
   
+  /** Max number of elements in the buffer. */
+  private final int maxBufferSize; 
+  
+  /** size of each element of the buffer. */
   public final static int GENERATED_ELEMENT_SIZE = 400;
+  
   
   static class GeneratedElement {
     List<Edge> edges;
@@ -42,19 +53,19 @@ public class FitnessOptimized extends Fitness {
   }
   
   
-  public FitnessOptimized(EdgeFactory edgeFactory,
-                 UnboundedImage refImg,
-                 Image importanceMappingImg,
-                 int maxBufferSize) {
-    super(edgeFactory, refImg, importanceMappingImg);
+  public FitnessFast(
+        UnboundedImage refImg,
+        Image importanceMappingImg,
+        int maxBufferSize) {
+    super(refImg, importanceMappingImg);
     this.maxBufferSize = maxBufferSize;
     this.buffer = new LinkedList<>();
   }
    
   @Override
-  public UnboundedImage drawImage(StringPathDNA imageToDraw) {
-    List<Edge> edges = getAllEdges(imageToDraw);
-    edges.sort(Edge.COMPARATOR);
+  public UnboundedImage drawImage(EdgeListDNA imageToDraw) {
+    List<Edge> edges = imageToDraw.getAllEdges();
+    edges = edges.stream().sorted(Edge.COMPARATOR).collect(Collectors.toList());
     
     UnboundedImage finalImage = new UnboundedImage(this.refImg.getSize());
     
@@ -176,25 +187,4 @@ public class FitnessOptimized extends Fitness {
     return elements;
   }
 
-  
-  private List<Edge> getAllEdges(StringPathDNA imageToDraw) {
-    List<Edge> edges = new LinkedList<>();
-    
-    StringPathBase prevBase = imageToDraw.getBase(0);
-    for (int i=1; i<imageToDraw.getSize(); i++) {
-      StringPathBase curBase = imageToDraw.getBase(i);
-      
-      Optional<Edge> oe = edgeFactory.getEdge(
-          prevBase.getNail(), prevBase.isTurnClockwise(), 
-          curBase.getNail(),  curBase.isTurnClockwise());
-      if (!oe.isPresent()) 
-        throw new RuntimeException("no edge matched between nail "+prevBase+" and nail "+curBase+"!");
-      edges.add(oe.get());
-      
-      prevBase = curBase;
-    }
-    
-    return edges;
-  }
-  
 }

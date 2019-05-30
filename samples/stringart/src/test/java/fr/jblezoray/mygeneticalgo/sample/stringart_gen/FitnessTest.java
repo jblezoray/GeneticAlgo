@@ -24,7 +24,7 @@ public class FitnessTest {
   private static UnboundedImage REF_IMG; 
   private static ByteImage POI_IMG; 
   private static EdgeFactory EDGE_FACTORY;
-  private static StringPathDNAFactory DNA_FACTORY;
+  private static EdgeListDNAFactory DNA_FACTORY;
   private static int DNA_SIZE = 1_000;
   
   @BeforeClass
@@ -35,7 +35,7 @@ public class FitnessTest {
     POI_IMG = EdgeImageIO.readResource(POI_IMG_RESOURCE_NAME);
     EdgeDrawer edgeDrawer = new EdgeDrawer(REF_IMG.getSize(), NB_NAILS, 0.15f, 2f);
     EDGE_FACTORY = new EdgeFactory(MIN_NAILS_DIFF, NB_NAILS, false, false, edgeDrawer); 
-    DNA_FACTORY = new StringPathDNAFactory(DNA_SIZE, MIN_NAILS_DIFF, NB_NAILS, false, false);
+    DNA_FACTORY = new EdgeListDNAFactory(EDGE_FACTORY, DNA_SIZE, MIN_NAILS_DIFF, NB_NAILS, false, false);
   }
   
   /**
@@ -43,26 +43,26 @@ public class FitnessTest {
    * @param size
    * @return
    */
-  private StringPathDNA[] createRelatedPopulation(int size) {
-    StringPathDNA[] dnas = new StringPathDNA[size];
+  private EdgeListDNA[] createRelatedPopulation(int size) {
+    EdgeListDNA[] dnas = new EdgeListDNA[size];
     dnas[0] = DNA_FACTORY.createRandomIndividual();
-    Assert.assertTrue(DNA_FACTORY.isValid(dnas[0])); 
+    Assert.assertTrue(dnas[0].isValid()); 
     for (int i=1; i<dnas.length; i++) {
       dnas[i] = dnas[i-1].copy();
       dnas[i].doMutate(0.015f);
     }
-    for (StringPathDNA dna : dnas) 
-      Assert.assertTrue(DNA_FACTORY.isValid(dna)); 
+    for (EdgeListDNA dna : dnas) 
+      Assert.assertTrue(dna.isValid()); 
     return dnas;
   }
   
   @Test
-  public void test() throws IOException {
-    Fitness f = new Fitness(EDGE_FACTORY, REF_IMG, POI_IMG);
-    FitnessOptimized fo = new FitnessOptimized(EDGE_FACTORY, REF_IMG, POI_IMG, 100);
-    StringPathDNA[] dnas = createRelatedPopulation(3);
+  public void test_FitnessFast_has_same_result_as_Fitness() throws IOException {
+    Fitness f = new Fitness(REF_IMG, POI_IMG);
+    FitnessFast fo = new FitnessFast(REF_IMG, POI_IMG, 100);
+    EdgeListDNA[] dnas = createRelatedPopulation(3);
 
-    for (StringPathDNA dna : dnas) {
+    for (EdgeListDNA dna : dnas) {
       UnboundedImage uif = f.drawImage(dna);
       UnboundedImage uifo = fo.drawImage(dna);
       Image diff = uif.differenceWith(uifo);

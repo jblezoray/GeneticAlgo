@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_nogen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.hillclimb;
 
 import java.io.File;
 import java.io.IOException;
