@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,7 +1,7 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
 
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.MIN_NAILS_DIFF;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.NB_NAILS;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.MIN_NAILS_DIFF;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.NB_NAILS;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeDrawer;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNAFactory;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 import fr.jblezoray.mygeneticalgo.utils.RandomSingleton;
 

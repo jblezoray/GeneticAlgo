@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
 
 import fr.jblezoray.mygeneticalgo.IFitness;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;

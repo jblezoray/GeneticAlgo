@@ -1,14 +1,14 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
+package fr.jblezoray.mygeneticalgo.sample.stringart;
 
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.CANVAS_WIDTH_MILLIMETERS;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.DEFAULT_EDGE_WAY;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.EDGE_WAY_ENABLED;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.FEATURES_IMAGE_PATH;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.GOAL_IMAGE_PATH;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.MIN_NAILS_DIFF;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.NB_NAILS;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.PIN_DIAMETER_MILLIMETERS;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.THREAD_THICKNESS_MILLIMETERS;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.CANVAS_WIDTH_MILLIMETERS;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.DEFAULT_EDGE_WAY;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.EDGE_WAY_ENABLED;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.FEATURES_IMAGE_PATH;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.GOAL_IMAGE_PATH;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.MIN_NAILS_DIFF;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.NB_NAILS;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.PIN_DIAMETER_MILLIMETERS;
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.THREAD_THICKNESS_MILLIMETERS;
 
 import java.io.IOException;
 
@@ -17,6 +17,11 @@ import fr.jblezoray.mygeneticalgo.ISelection;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeDrawer;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNAFactory;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Fitness;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.FitnessFast;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.ImagePrintListener;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
@@ -24,7 +29,7 @@ import fr.jblezoray.mygeneticalgo.selection.BinaryTournamentSelection;
 import fr.jblezoray.mygeneticalgo.utils.FitnessRepartitionTextPloterListener;
 import fr.jblezoray.mygeneticalgo.utils.StatsListener;
 
-public class Main {
+public class GeneticMain {
   
   public static void main(String[] args) throws IOException {
     

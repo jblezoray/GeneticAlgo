@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
 
 public class Constants {
   public static final String GOAL_IMAGE_PATH = "test2/einstein.png";

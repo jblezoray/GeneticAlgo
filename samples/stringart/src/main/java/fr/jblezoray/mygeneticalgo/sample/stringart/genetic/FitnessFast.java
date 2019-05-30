@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart_gen;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

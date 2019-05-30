@@ -1,14 +1,17 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart.hillclimb;
+package fr.jblezoray.mygeneticalgo.sample.stringart;
+
+import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.*;
 
 import java.io.File;
 import java.io.IOException;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
-import static fr.jblezoray.mygeneticalgo.sample.stringart_gen.Constants.*;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.ScoredEdge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.hillclimb.IStringArtAlgoListener;
+import fr.jblezoray.mygeneticalgo.sample.stringart.hillclimb.StringArtAlgo;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 
-public class Main {
+public class HillClimbMain {
   
   public static void main(String[] args) throws IOException {
     StringArtAlgo stringArtAlgo = new StringArtAlgo(GOAL_IMAGE_PATH, 
