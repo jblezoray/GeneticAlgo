@@ -66,12 +66,26 @@ public class FitnessFast extends Fitness {
   public UnboundedImage drawImage(EdgeListDNA imageToDraw) {
     List<Edge> edges = imageToDraw.getAllEdges();
     edges = edges.stream().sorted(Edge.COMPARATOR).collect(Collectors.toList());
-    
     UnboundedImage finalImage = new UnboundedImage(this.refImg.getSize());
-    
-    // At each round, find the GeneratedElement that, if added, results in the 
-    // easiest contribution to make (that has the less edges to remove).  Then,
-    // add it to the image, and remove the edges as man edges that are in excess.
+    findAndAddGeneratedElements(finalImage, edges);
+    addEdges(finalImage, edges);
+    return finalImage;
+  }
+
+
+  /**
+   * Find and add GeneratedElements from the cache.
+   * 
+   * At each round, find the GeneratedElement that, if added, results in the
+   * easiest contribution to make (that has the less edges to remove).  Then,
+   * add it to the image, and remove the edges as man edges that are in excess.
+   * 
+   * @param finalImage the image to draw onto.
+   * @param edges the list of edges to draw.  The list will be modified, as some
+   *     of the edges will have been drawn. 
+   */
+  private void findAndAddGeneratedElements(
+      UnboundedImage finalImage, List<Edge> edges) {
     Optional<GeneratedElementOperations> bestOpt = Optional.empty();
     do {
       bestOpt = buildOperationsFor(edges).parallelStream()
@@ -83,58 +97,69 @@ public class FitnessFast extends Fitness {
         GeneratedElementOperations best = bestOpt.get();
         best.generatedElement.reusabilityScore+=2;
         addToImage(finalImage, best);
-        deleteContributedEdges(edges, best);
+        deleteContributedEdges(edges, best.generatedElement.edges);
       }
     } while (edges.size()>GENERATED_ELEMENT_SIZE && bestOpt.isPresent());
-    
-    // Draw remaining edges one by one.  Eventually, save the result for 
-    // subsequent calculous.
-    while(edges.size()>0) {
-      
-      int sublistSize = Math.min(edges.size(), GENERATED_ELEMENT_SIZE);
-      List<Edge> sublist = new ArrayList<>(edges.subList(0, sublistSize));
-      UnboundedImage subImage = new UnboundedImage(this.refImg.getSize());
-      for (Edge edge : sublist) {
-        subImage.add(edge.getDrawnEdgeData());
-        edges.remove(edge);
-      }
-      finalImage.add(subImage);
-      
-      if (sublistSize == GENERATED_ELEMENT_SIZE) {
-        GeneratedElement generatedElement = new GeneratedElement();
-        generatedElement.edges = sublist;
-        generatedElement.generated = subImage;
-        generatedElement.reusabilityScore = 3;
-        synchronized (this.buffer) {
-          this.buffer.add(0, generatedElement);
-          if (this.buffer.size()>this.maxBufferSize) {
-            this.buffer.stream()
-                .max((a,b)->a.reusabilityScore-b.reusabilityScore)
-                .ifPresent(ge -> this.buffer.remove(ge));
-          }
-        }
-      }
-    }
-    
-    return finalImage;
-  }
-
-
-  private void deleteContributedEdges(List<Edge> edges, GeneratedElementOperations geo) {
-    geo.generatedElement.edges.forEach(edge -> {
-      edges.remove(edge);
-    });
   }
 
   
-  private void addToImage(UnboundedImage finalImage, GeneratedElementOperations geo) {
+  private static void addToImage(UnboundedImage finalImage, GeneratedElementOperations geo) {
     finalImage.add(geo.generatedElement.generated);
     // this is not parallelizable. do not use parallelStream() here.
     geo.diffToDel.stream().forEach(edgeToDelete -> 
       finalImage.remove(edgeToDelete.getDrawnEdgeData())
     );
   }
-  
+
+  private static void deleteContributedEdges(List<Edge> edges, List<Edge> toRemove) {
+    toRemove.forEach(edge -> {
+      edges.remove(edge);
+    });
+  }
+
+  /**
+   * Draw all the edges one by one. 
+   * 
+   * Will eventually save the result for subsequent calculous.
+   * 
+   * @param finalImage the image to draw onto.
+   * @param edges the list of edges to draw.  Will be emty after the execution.
+   */
+  private void addEdges(UnboundedImage finalImage, List<Edge> edges) {
+    while(edges.size()>0) {
+      int sublistSize = Math.min(edges.size(), GENERATED_ELEMENT_SIZE);
+      List<Edge> sublist = new ArrayList<>(edges.subList(0, sublistSize));
+      UnboundedImage subImage = drawEdges(sublist);
+      deleteContributedEdges(edges, sublist);
+      finalImage.add(subImage);
+      if (sublistSize == GENERATED_ELEMENT_SIZE) {
+        saveGeneratedElement(sublist, subImage);
+      }
+    }
+  }
+
+  private UnboundedImage drawEdges(List<Edge> sublist) {
+    UnboundedImage subImage = new UnboundedImage(this.refImg.getSize());
+    for (Edge edge : sublist) {
+      subImage.add(edge.getDrawnEdgeData());
+    }
+    return subImage;
+  }
+
+  private void saveGeneratedElement(List<Edge> sublist, UnboundedImage subImage) {
+    GeneratedElement generatedElement = new GeneratedElement();
+    generatedElement.edges = sublist;
+    generatedElement.generated = subImage;
+    generatedElement.reusabilityScore = 3;
+    synchronized (this.buffer) {
+      this.buffer.add(0, generatedElement);
+      if (this.buffer.size()>this.maxBufferSize) {
+        this.buffer.stream()
+            .max((a,b)->a.reusabilityScore-b.reusabilityScore)
+            .ifPresent(ge -> this.buffer.remove(ge));
+      }
+    }
+  }
 
   /**
    * Init a new list of GeneratedElementOperations, one per instance in the 
