@@ -29,7 +29,7 @@ public class FitnessTest {
   private static ByteImage POI_IMG; 
   private static EdgeFactory EDGE_FACTORY;
   private static EdgeListDNAFactory DNA_FACTORY;
-  private static int DNA_SIZE = 1_000;
+  private static int DNA_SIZE = 300;
   
   @BeforeClass
   public static void before_class() throws IOException {

@@ -23,11 +23,23 @@ public class FitnessFast extends Fitness {
   private LinkedList<GeneratedElement> buffer;
   
   /** Max number of elements in the buffer. */
-  private final int maxBufferSize; 
+  private final int maxBufferSize;
+
+  private ArrayList<String> reusedStats = new ArrayList<>(); 
   
   /** size of each element of the buffer. */
-  public final static int GENERATED_ELEMENT_SIZE = 400;
-  
+  public final static int GENERATED_ELEMENT_SIZE = 20;
+
+  public String getStats() {
+    String reused = reusedStats.stream()
+        .collect(Collectors.groupingBy(String::toString))
+        .values().stream()
+        .map(list -> list.get(0) + "(x"+list.size()+")")
+        .reduce("", (a,b) -> a + " " + b);
+    reusedStats.clear();
+    return "reused:"+reused;
+  }
+
   
   static class GeneratedElement {
     List<Edge> edges;
@@ -66,9 +78,15 @@ public class FitnessFast extends Fitness {
   public UnboundedImage drawImage(EdgeListDNA imageToDraw) {
     List<Edge> edges = imageToDraw.getAllEdges();
     edges = edges.stream().sorted(Edge.COMPARATOR).collect(Collectors.toList());
+    
     UnboundedImage finalImage = new UnboundedImage(this.refImg.getSize());
+    
+    int sizeBefore = edges.size();
     findAndAddGeneratedElements(finalImage, edges);
+    this.reusedStats.add("" + (sizeBefore - edges.size()) + "/" + sizeBefore);
+    
     addEdges(finalImage, edges);
+    
     return finalImage;
   }
 
@@ -90,7 +108,7 @@ public class FitnessFast extends Fitness {
     do {
       bestOpt = buildOperationsFor(edges).parallelStream()
           .peek(geo -> geo.contributionScore = geo.generatedElement.edges.size() - geo.diffToDel.size())
-          .filter(geo -> geo.contributionScore > GENERATED_ELEMENT_SIZE/2)
+          .filter(geo -> geo.contributionScore > GENERATED_ELEMENT_SIZE/3)
           .max((a, b) -> a.contributionScore - b.contributionScore);
       
       if (bestOpt.isPresent()) {
@@ -100,12 +118,13 @@ public class FitnessFast extends Fitness {
         deleteContributedEdges(edges, best.generatedElement.edges);
       }
     } while (edges.size()>GENERATED_ELEMENT_SIZE && bestOpt.isPresent());
+    return;
   }
 
   
   private static void addToImage(UnboundedImage finalImage, GeneratedElementOperations geo) {
     finalImage.add(geo.generatedElement.generated);
-    // this is not parallelizable. do not use parallelStream() here.
+    // this is not parallelizable: do not use parallelStream() here.
     geo.diffToDel.stream().forEach(edgeToDelete -> 
       finalImage.remove(edgeToDelete.getDrawnEdgeData())
     );
@@ -211,5 +230,4 @@ public class FitnessFast extends Fitness {
     }
     return elements;
   }
-
 }
