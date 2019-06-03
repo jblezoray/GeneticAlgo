@@ -6,6 +6,7 @@ import java.io.IOException;
 import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeDrawer;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.Fitness;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
 public class ImagePrintListener implements IGeneticAlgoListener<EdgeListDNA> {

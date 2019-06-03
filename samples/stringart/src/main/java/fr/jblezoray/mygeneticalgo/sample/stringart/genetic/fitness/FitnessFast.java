@@ -1,12 +1,15 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
@@ -18,53 +21,22 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
  *   
  * @author jbl
  */
-public class FitnessFast extends Fitness {
+public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeListDNA>{
  
-  private LinkedList<GeneratedElement> buffer;
+  private List<GeneratedElement> buffer;
   
   /** Max number of elements in the buffer. */
   private final int maxBufferSize;
 
-  private ArrayList<String> reusedStats = new ArrayList<>(); 
+  private List<String> reusedStats = new ArrayList<>(); 
+  private List<Integer> listSizeStats = new ArrayList<>();
+  private List<Long> timeStats = new ArrayList<>(); 
   
   /** size of each element of the buffer. */
-  public final static int GENERATED_ELEMENT_SIZE = 20;
+  private final static int GENERATED_ELEMENT_SIZE = 100;
+  
+  private final static int MIN_SCORE = (int)(GENERATED_ELEMENT_SIZE * 0.60f);
 
-  public String getStats() {
-    String reused = reusedStats.stream()
-        .collect(Collectors.groupingBy(String::toString))
-        .values().stream()
-        .map(list -> list.get(0) + "(x"+list.size()+")")
-        .reduce("", (a,b) -> a + " " + b);
-    reusedStats.clear();
-    return "reused:"+reused;
-  }
-
-  
-  static class GeneratedElement {
-    List<Edge> edges;
-    UnboundedImage generated;
-    int reusabilityScore;
-    @Override
-    public String toString() {
-      return edges.toString();
-    }
-  }
-  
-  static class GeneratedElementOperations {
-    GeneratedElement generatedElement;
-    int curIndex;
-    List<Edge> diffToDel;
-    int contributionScore;
-    public GeneratedElementOperations(GeneratedElement wrappedGeneratedElement) {
-      this.generatedElement = wrappedGeneratedElement;
-      this.curIndex = 0;
-      this.diffToDel = new ArrayList<>();
-      this.contributionScore = 0;
-    }
-  }
-  
-  
   public FitnessFast(
         UnboundedImage refImg,
         Image importanceMappingImg,
@@ -73,19 +45,61 @@ public class FitnessFast extends Fitness {
     this.maxBufferSize = maxBufferSize;
     this.buffer = new LinkedList<>();
   }
+
+  
+  @Override
+  public void notificationOfGeneration(int _1, EdgeListDNA _2, double[] _3) {
+    int buffSizeBeforePrune = this.buffer.size();
+    
+    // trim buffer list to keep only the best ones. 
+    this.buffer = this.buffer.stream()
+        .sorted()
+        .limit(maxBufferSize)
+        .peek(GeneratedElement::resetReusabilityScore)
+        .collect(Collectors.toList());
+    
+    String reused = reusedStats.stream()
+        .collect(Collectors.groupingBy(String::toString))
+        .values().stream()
+        .sorted((la,lb) -> lb.size() - la.size())
+        .map(list -> list.get(0) + "(x"+list.size()+")")
+        .reduce("", (a,b) -> a + " " + b);
+    reusedStats.clear();
+    
+    int meanDnaSize = listSizeStats.size()==0 ? -1 :  
+        listSizeStats.stream() .reduce(0, (a,b) -> a+b) / listSizeStats.size();
+    
+    long meantime = timeStats.size()==0 ? -1 :  
+      timeStats.stream().reduce(0L, (a,b) -> a+b) / timeStats.size();
+    
+    System.out.println(
+        "buf:"+buffSizeBeforePrune+" (after:"+this.buffer.size()+")"
+        +" meanDnaSize="+meanDnaSize
+        +" meanTime="+meantime+"ms"
+        +" "+reused);
+  }
+  
    
   @Override
   public UnboundedImage drawImage(EdgeListDNA imageToDraw) {
+    long start = new Date().getTime();
+    
     List<Edge> edges = imageToDraw.getAllEdges();
+    this.listSizeStats.add(edges.size());
+    
     edges = edges.stream().sorted(Edge.COMPARATOR).collect(Collectors.toList());
     
     UnboundedImage finalImage = new UnboundedImage(this.refImg.getSize());
     
     int sizeBefore = edges.size();
     findAndAddGeneratedElements(finalImage, edges);
-    this.reusedStats.add("" + (sizeBefore - edges.size()) + "/" + sizeBefore);
+//    this.reusedStats.add("" + (sizeBefore - edges.size()) + "/" + sizeBefore);
+    this.reusedStats.add("" + (sizeBefore - edges.size()) );
     
     addEdges(finalImage, edges);
+    
+    long  timeTook = new Date().getTime() - start;
+    this.timeStats.add(timeTook);
     
     return finalImage;
   }
@@ -107,27 +121,27 @@ public class FitnessFast extends Fitness {
     Optional<GeneratedElementOperations> bestOpt = Optional.empty();
     do {
       bestOpt = buildOperationsFor(edges).parallelStream()
-          .peek(geo -> geo.contributionScore = geo.generatedElement.edges.size() - geo.diffToDel.size())
-          .filter(geo -> geo.contributionScore > GENERATED_ELEMENT_SIZE/3)
+          .peek(geo -> geo.contributionScore = geo.generatedElement.getEdges().size() - geo.diffToDel.size())
+          .filter(geo -> geo.contributionScore > MIN_SCORE)
           .max((a, b) -> a.contributionScore - b.contributionScore);
       
       if (bestOpt.isPresent()) {
         GeneratedElementOperations best = bestOpt.get();
-        best.generatedElement.reusabilityScore+=2;
-        addToImage(finalImage, best);
-        deleteContributedEdges(edges, best.generatedElement.edges);
+        best.generatedElement.incrementReusabilityScore();
+        
+        UnboundedImage geCopy = best.generatedElement.getGenerated().deepCopy();
+        // this is not parallelizable: do not use parallelStream() here.
+        best.diffToDel.stream().forEach(edgeToDelete -> 
+          geCopy.remove(edgeToDelete.getDrawnEdgeData())
+        );
+        
+        finalImage.add(geCopy);
+        deleteContributedEdges(edges, best.generatedElement.getEdges());
+
+        saveGeneratedElement(best.diffAdded, geCopy);
       }
     } while (edges.size()>GENERATED_ELEMENT_SIZE && bestOpt.isPresent());
     return;
-  }
-
-  
-  private static void addToImage(UnboundedImage finalImage, GeneratedElementOperations geo) {
-    finalImage.add(geo.generatedElement.generated);
-    // this is not parallelizable: do not use parallelStream() here.
-    geo.diffToDel.stream().forEach(edgeToDelete -> 
-      finalImage.remove(edgeToDelete.getDrawnEdgeData())
-    );
   }
 
   private static void deleteContributedEdges(List<Edge> edges, List<Edge> toRemove) {
@@ -166,17 +180,10 @@ public class FitnessFast extends Fitness {
   }
 
   private void saveGeneratedElement(List<Edge> sublist, UnboundedImage subImage) {
-    GeneratedElement generatedElement = new GeneratedElement();
-    generatedElement.edges = sublist;
-    generatedElement.generated = subImage;
-    generatedElement.reusabilityScore = 3;
+    GeneratedElement generatedElement = new GeneratedElement(sublist, subImage);
+    generatedElement.incrementReusabilityScore();
     synchronized (this.buffer) {
       this.buffer.add(0, generatedElement);
-      if (this.buffer.size()>this.maxBufferSize) {
-        this.buffer.stream()
-            .max((a,b)->a.reusabilityScore-b.reusabilityScore)
-            .ifPresent(ge -> this.buffer.remove(ge));
-      }
     }
   }
 
@@ -196,7 +203,6 @@ public class FitnessFast extends Fitness {
     List<GeneratedElementOperations> elements;
     synchronized (this.buffer) {
       elements = this.buffer.stream()
-          .peek(ge -> ge.reusabilityScore--)
           .map(GeneratedElementOperations::new)
           .collect(Collectors.toList());
     }
@@ -205,29 +211,35 @@ public class FitnessFast extends Fitness {
       List<GeneratedElementOperations> badSmells = new ArrayList<>();
       for (GeneratedElementOperations ge : elements) {
         int comparison = -1;
-        while (comparison < 0 && ge.generatedElement.edges.size()>ge.curIndex) {
-          Edge curEdge = ge.generatedElement.edges.get(ge.curIndex);
+        while (comparison < 0 && ge.generatedElement.getEdges().size()>ge.curIndex) {
+          Edge curEdge = ge.generatedElement.getEdges().get(ge.curIndex);
           comparison = Edge.COMPARATOR.compare(curEdge, edge);
           // if comparison > 0, then the 'curEdge' is after 'edge' : we don't
           // increment the pointer to keep it for comparison with the next 
           // 'edge'. 
           if (comparison <= 0) ge.curIndex++;
           if (comparison < 0) ge.diffToDel.add(curEdge);
+          if (comparison == 0) ge.diffAdded.add(curEdge);
         }
         // Does this GeneratedElementOperations start to smell bad due to too 
         // much implied operations ?
-        if (ge.diffToDel.size()>GENERATED_ELEMENT_SIZE/2) {
+        if (ge.diffToDel.size()>MIN_SCORE) {
           badSmells.add(ge);
         }
       }
       elements.removeAll(badSmells);
     }
     // All subsequent edge are to be deleted.
+    List<GeneratedElementOperations> badSmells = new ArrayList<>();
     for (GeneratedElementOperations ge : elements) {
-      while (ge.generatedElement.edges.size()>ge.curIndex) {
-        ge.diffToDel.add(ge.generatedElement.edges.get(ge.curIndex++));
+      while (ge.generatedElement.getEdges().size()>ge.curIndex) {
+        ge.diffToDel.add(ge.generatedElement.getEdges().get(ge.curIndex++));
+      }
+      if (ge.diffToDel.size()>MIN_SCORE) {
+        badSmells.add(ge);
       }
     }
+    elements.removeAll(badSmells);
     return elements;
   }
 }

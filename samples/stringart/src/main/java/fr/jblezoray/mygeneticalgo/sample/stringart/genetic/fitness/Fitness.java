@@ -1,7 +1,8 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness;
 
 import fr.jblezoray.mygeneticalgo.IFitness;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 

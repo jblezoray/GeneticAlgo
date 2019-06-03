@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart.genetic;
+package fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness;
 
 import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.MIN_NAILS_DIFF;
 import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.NB_NAILS;
@@ -14,8 +14,8 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNAFactory;
-import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Fitness;
-import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.FitnessFast;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.Fitness;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.FitnessFast;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;

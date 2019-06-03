@@ -323,7 +323,7 @@ public class EdgeListDNA extends AbstractDNA {
     return new EdgeListDNA(this);
   }
 
-  boolean isValid() {
+  public boolean isValid() {
     Optional<DirectedEdge> edge = this.resolveEdge(0);
     boolean ok = true;
     int prevEndNail = edge.map(DirectedEdge::getEndNail).orElse(-1);
