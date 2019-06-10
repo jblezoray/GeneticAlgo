@@ -2,8 +2,6 @@ package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 
 import java.io.ByteArrayOutputStream;
 
-// see org.nd4j.linalg.api.buffer.DataBuffer.Type.COMPRESSED
-
 public class CompressedByteImage implements Image {
   
   private final byte[] compressedData;

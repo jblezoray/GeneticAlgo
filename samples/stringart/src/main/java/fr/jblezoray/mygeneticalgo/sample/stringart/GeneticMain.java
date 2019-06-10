@@ -19,11 +19,15 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNAFactory;
-import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.FitnessFast;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.ImagePrintListener;
+import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.FitnessFast2;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 import fr.jblezoray.mygeneticalgo.selection.BinaryTournamentSelection;
+import fr.jblezoray.mygeneticalgo.utils.FitnessHistoryGraphicalPloter;
+import fr.jblezoray.mygeneticalgo.utils.FitnessRepartitionTextPloterListener;
+import fr.jblezoray.mygeneticalgo.utils.StatsListener;
 
 public class GeneticMain {
   
@@ -50,7 +54,7 @@ public class GeneticMain {
     System.out.println("initalizing edge factory ...");
     EdgeFactory edgeFactory = new EdgeFactory(MIN_NAILS_DIFF, NB_NAILS, 
         EDGE_WAY_ENABLED, DEFAULT_EDGE_WAY, edgeDrawer); 
-    FitnessFast fitness = new FitnessFast(refImgUnbounded, impImg, 400);
+    FitnessFast2 fitness = new FitnessFast2(refImgUnbounded, impImg, 5_000, 50, NB_NAILS);
 
     System.out.println("initalizing dna factory ...");
     EdgeListDNAFactory dnaFactory = new EdgeListDNAFactory(
@@ -65,10 +69,10 @@ public class GeneticMain {
         fitness, dnaFactory, selection, nbIndividuals);
     
     System.out.println("initalizing listeners ...");
-//    ga.addListener(new StatsListener<EdgeListDNA>(System.out, 1));
-//    ga.addListener(new FitnessRepartitionTextPloterListener<EdgeListDNA>(System.out, 10, 80, 5));
-//    ga.addListener(new ImagePrintListener(fitness, edgeDrawer, 25));
-//    ga.addListener(new FitnessHistoryGraphicalPloter<>());
+    ga.addListener(new StatsListener<EdgeListDNA>(System.out, 1));
+    ga.addListener(new FitnessRepartitionTextPloterListener<EdgeListDNA>(System.out, 10, 80, 5));
+    ga.addListener(new ImagePrintListener(fitness, edgeDrawer, 25));
+    ga.addListener(new FitnessHistoryGraphicalPloter<>());
     ga.addListener(fitness);
     ga.setCrossoversRange(1, 2);
     ga.setMutationRate(0.05f);

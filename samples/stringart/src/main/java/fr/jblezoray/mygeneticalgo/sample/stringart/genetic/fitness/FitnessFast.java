@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedUnboundedImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
@@ -129,7 +130,7 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
         GeneratedElementOperations best = bestOpt.get();
         best.generatedElement.incrementReusabilityScore();
         
-        UnboundedImage geCopy = best.generatedElement.getGenerated().deepCopy();
+        UnboundedImage geCopy = best.generatedElement.getGenerated().decompress().deepCopy();
         // this is not parallelizable: do not use parallelStream() here.
         best.diffToDel.stream().forEach(edgeToDelete -> 
           geCopy.remove(edgeToDelete.getDrawnEdgeData())
@@ -180,7 +181,8 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
   }
 
   private void saveGeneratedElement(List<Edge> sublist, UnboundedImage subImage) {
-    GeneratedElement generatedElement = new GeneratedElement(sublist, subImage);
+    CompressedUnboundedImage compressed = new CompressedUnboundedImage(subImage);
+    GeneratedElement generatedElement = new GeneratedElement(sublist, compressed);
     generatedElement.incrementReusabilityScore();
     synchronized (this.buffer) {
       this.buffer.add(0, generatedElement);

@@ -1,6 +1,7 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 /**
  * We here use integer to represent bytes, in order to be able to reverse 
@@ -28,7 +29,7 @@ public class UnboundedImage implements Image {
     Arrays.fill(this.unboundedBytes, 0xFF);
   }
   
-  private UnboundedImage(ImageSize size, int[] bytes) {
+  public UnboundedImage(ImageSize size, int[] bytes) {
     this.size = size;
     this.unboundedBytes = bytes;
   }
@@ -146,6 +147,10 @@ public class UnboundedImage implements Image {
       this.unboundedBytes[i] += image.unboundedBytes[i] - 0xFF; 
     }
     return this;
+  }
+
+  public IntStream intStream() {
+    return IntStream.of(this.unboundedBytes);
   }
 
 }

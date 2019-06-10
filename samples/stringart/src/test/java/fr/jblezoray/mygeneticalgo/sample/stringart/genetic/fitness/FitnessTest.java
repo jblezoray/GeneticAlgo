@@ -3,6 +3,7 @@ package fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness;
 import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.MIN_NAILS_DIFF;
 import static fr.jblezoray.mygeneticalgo.sample.stringart.genetic.Constants.NB_NAILS;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.junit.Assert;
@@ -14,8 +15,6 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeFactory;
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNAFactory;
-import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.Fitness;
-import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness.FitnessFast;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
@@ -70,6 +69,23 @@ public class FitnessTest {
       UnboundedImage uif = f.drawImage(dna);
       UnboundedImage uifo = fo.drawImage(dna);
       Image diff = uif.differenceWith(uifo);
+      Assert.assertEquals(0.0, diff.l2norm(), 0.00001);
+    }
+  }
+  
+  @Test
+  public void test_FitnessFast2_has_same_result_as_Fitness() throws IOException {
+    Fitness f = new Fitness(REF_IMG, POI_IMG);
+    FitnessFast2 fo = new FitnessFast2(REF_IMG, POI_IMG, 100, 20, NB_NAILS);
+    EdgeListDNA[] dnas = createRelatedPopulation(3);
+
+    for (EdgeListDNA dna : dnas) {
+      UnboundedImage uif = f.drawImage(dna);
+      UnboundedImage uifo = fo.drawImage(dna);
+      Image diff = uif.differenceWith(uifo);
+//      EdgeImageIO.writeToFile(uif, new File("__uif.png"));
+//      EdgeImageIO.writeToFile(uifo, new File("__uifo.png"));
+//      EdgeImageIO.writeToFile(diff, new File("__diff.png"));
       Assert.assertEquals(0.0, diff.l2norm(), 0.00001);
     }
   }
