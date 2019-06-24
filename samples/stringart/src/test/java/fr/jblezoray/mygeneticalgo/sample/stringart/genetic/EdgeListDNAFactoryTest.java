@@ -25,7 +25,7 @@ public class EdgeListDNAFactoryTest {
     // reinit everything with this new PRNG.
     ImageSize imageSize = new ImageSize(100, 100);
     EdgeDrawer edgeDrawer = new EdgeDrawer(imageSize, NB_NAILS, 0.15f, 2f);
-    EDGE_FACTORY = new EdgeFactory(MIN_NAILS_DIFF, NB_NAILS, false, false, edgeDrawer);;
+    EDGE_FACTORY = new EdgeFactory(MIN_NAILS_DIFF, NB_NAILS, false, false, edgeDrawer);
   }
   
   @Test

@@ -5,13 +5,14 @@ import java.util.List;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedUnboundedImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
 
 class GeneratedElement implements Comparable<GeneratedElement> {
   private final List<Edge> edges;
-  private final CompressedUnboundedImage generated;
+  private final UnboundedImage generated;
   private int reusabilityScore;
   
-  public GeneratedElement(List<Edge> edges, CompressedUnboundedImage generated) {
+  public GeneratedElement(List<Edge> edges, UnboundedImage generated) {
     this.edges = Collections.unmodifiableList(edges);
     this.generated = generated;
     this.reusabilityScore = 0;
@@ -26,7 +27,7 @@ class GeneratedElement implements Comparable<GeneratedElement> {
     return edges;
   }
 
-  public CompressedUnboundedImage getGenerated() {
+  public UnboundedImage getGenerated() {
     return generated;
   }
 
@@ -50,7 +51,7 @@ class GeneratedElement implements Comparable<GeneratedElement> {
 
   @Override
   public int compareTo(GeneratedElement o) {
-    return this.reusabilityScore - o.reusabilityScore;
+    return o.reusabilityScore - this.reusabilityScore;
   }
   
   

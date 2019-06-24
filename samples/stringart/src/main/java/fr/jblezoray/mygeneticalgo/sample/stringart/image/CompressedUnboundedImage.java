@@ -3,33 +3,161 @@ package fr.jblezoray.mygeneticalgo.sample.stringart.image;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.stream.IntStream;
-import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.Inflater;
+
 
 public class CompressedUnboundedImage implements Image {
 
   private byte[] compressed;
   private ImageSize size;
-  private int compressedBytesLength;
-  
+  private int uncompressedBytesLength;
   
   public CompressedUnboundedImage(UnboundedImage img) {
     this.size = img.getSize();
     compress(img.intStream());
   }
 
-  class Accumulator {
-    private ByteArrayOutputStream compressedBytes;
-    void write(int i) {
-      // TODO
+  public UnboundedImage decompress() {
+    return new UnboundedImage(size, decompressData());
+  }
+
+  @Override
+  public ByteImage asByteImage() {
+    return decompress().asByteImage();
+  }
+
+  @Override
+  public ImageSize getSize() {
+    return this.size;
+  }
+
+  public static enum AccumulatorMode {
+    NONE(0x00), SEQUENCE(0x01), MULT(0x02), SEQUENCE_BIG_INT(0x03);
+    private byte headerByte;
+    AccumulatorMode(int headerByte) {
+      this.headerByte = (byte)headerByte;
     }
+    public byte getHeaderByte() {
+      return this.headerByte;
+    }
+    public static AccumulatorMode fromHeaderByte(byte curByte) {
+      for (AccumulatorMode m : AccumulatorMode.values())
+        if (m.headerByte == curByte)
+          return m;
+      return null;
+    }
+  }
+
+  private static class Accumulator {
+    private ByteArrayOutputStream compressedBytes;
+    private byte[] workBuffer;
+    private AccumulatorMode curMode;
+    private int curWorkBufferIndex;
+    private static final int BUF_SIZE = 0x1024;
+    private static final int HALF_INT = Integer.MAX_VALUE >> 16;
+    
+    public Accumulator() {
+      this.compressedBytes = new ByteArrayOutputStream();
+      this.workBuffer = new byte[BUF_SIZE];
+      this.curMode = AccumulatorMode.MULT;
+      this.curWorkBufferIndex = -1;
+    }
+    
+    void write(int i) {
+      if (this.curWorkBufferIndex>=BUF_SIZE-4) {
+        this.flush();
+      }
+      
+      if (i>HALF_INT) {
+        if (this.curMode != AccumulatorMode.SEQUENCE_BIG_INT) {
+          this.flush();
+          this.curMode = AccumulatorMode.SEQUENCE_BIG_INT;
+          
+        } else {
+          this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i >> 24) & 0xFF);
+          this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i >> 16) & 0xFF);
+          this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i >> 8)  & 0xFF);
+          this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i)       & 0xFF);
+        }
+      }
+      else if (curMode==AccumulatorMode.MULT) {
+        if (this.workBuffer[0] == (byte) ((i >> 8)  & 0xFF) && 
+            this.workBuffer[1] == (byte) ((i)       & 0xFF)) {
+          this.curWorkBufferIndex += 2;
+          
+        } else {
+          this.flush();
+        }
+      }
+      else if (curMode==AccumulatorMode.SEQUENCE) {
+        byte b0 = (byte) ((i >> 8)  & 0xFF);
+        byte b1 = (byte) ((i)       & 0xFF);
+        if (b0 == this.workBuffer[this.curWorkBufferIndex-1] &&
+            b1 == this.workBuffer[this.curWorkBufferIndex]) {
+          // switch to mult mode.
+          this.curWorkBufferIndex = this.curWorkBufferIndex-2;
+          this.flush();
+          this.workBuffer[0] = b0;
+          this.workBuffer[1] = b1;
+          this.curWorkBufferIndex = 3; // two half bytes.  
+          this.curMode = AccumulatorMode.MULT;
+        } else {
+          this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i >> 8)  & 0xFF);
+          this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i)       & 0xFF);
+        }
+      }
+      
+      // no mode, add to buffer. 
+      if (curMode==AccumulatorMode.NONE) {
+        this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i >> 8)  & 0xFF);
+        this.workBuffer[++this.curWorkBufferIndex] = (byte) ((i)       & 0xFF);
+        if (this.curWorkBufferIndex==3) {
+          if (this.workBuffer[0] == this.workBuffer[2] && 
+              this.workBuffer[1] == this.workBuffer[3]) {
+            this.curMode = AccumulatorMode.MULT;
+          } else {
+            this.curMode = AccumulatorMode.SEQUENCE;
+          }
+        }
+      }
+    }
+    
+    void flush() {
+      if (this.curMode == AccumulatorMode.SEQUENCE_BIG_INT) {
+        this.compressedBytes.write(AccumulatorMode.SEQUENCE_BIG_INT.getHeaderByte());
+        this.compressedBytes.write((curWorkBufferIndex >> 8) & 0xFF);
+        this.compressedBytes.write((curWorkBufferIndex)      & 0xFF);
+        this.compressedBytes.write(this.workBuffer, 0, curWorkBufferIndex);
+        
+      } else if (this.curMode == AccumulatorMode.SEQUENCE
+              || this.curMode == AccumulatorMode.NONE) {
+        this.compressedBytes.write(AccumulatorMode.SEQUENCE.getHeaderByte());
+        this.compressedBytes.write((curWorkBufferIndex >> 8) & 0xFF);
+        this.compressedBytes.write((curWorkBufferIndex)      & 0xFF);
+        this.compressedBytes.write(this.workBuffer, 0, curWorkBufferIndex);
+        
+      } else if (this.curMode == AccumulatorMode.MULT) {
+        this.compressedBytes.write(AccumulatorMode.MULT.getHeaderByte());
+        this.compressedBytes.write((curWorkBufferIndex >> 8) & 0xFF);
+        this.compressedBytes.write((curWorkBufferIndex)      & 0xFF);
+        this.compressedBytes.write(this.workBuffer[0]);
+        this.compressedBytes.write(this.workBuffer[1]);
+        
+      } else {
+        throw new RuntimeException("Unknown mode " + this.curMode);
+      }
+
+      // reset.
+      this.curMode = AccumulatorMode.NONE;
+      this.curWorkBufferIndex = -1;
+    }
+    
     byte[] toByteArray() {
+      flush();
       return compressedBytes.toByteArray();
     }
+    
     void concat(Accumulator acc2) {
-      // TODO flush before.
+      flush();
       try {
         compressedBytes.write(acc2.compressedBytes.toByteArray());
       } catch (IOException e) {
@@ -37,20 +165,67 @@ public class CompressedUnboundedImage implements Image {
       }
     }
   }
-  // 
-  // |size|type|
-  // |    |    |         |         |         |
-  // |   int   |   int   |   int   |   int   |
+
   private void compress(IntStream intStream) {
-    Accumulator a = intStream.collect(
-        () -> new Accumulator(), 
-        (acc,i) -> acc.write(i), 
-        (acc1,acc2) -> acc1.concat(acc2));
-    this.compressed = a.compressedBytes.toByteArray();
+    this.uncompressedBytesLength = 0;
+    this.compressed = intStream
+        .peek((i) -> this.uncompressedBytesLength++)
+        .collect(
+            () -> new Accumulator(), 
+            (acc,i) -> acc.write(i), 
+            (acc1,acc2) -> acc1.concat(acc2))
+        .toByteArray();
   }
   
   private int[] decompressData() {
-    
+    int curCompressedIndex = 0;
+    int[] decompressed = new int[this.uncompressedBytesLength];
+    int curDecompressedIndex = 0;
+    AccumulatorMode curMode;
+    byte headerByte;
+    try {
+    while (curCompressedIndex<this.compressed.length){
+      // read mode. 
+      headerByte = this.compressed[curCompressedIndex++];
+      curMode = AccumulatorMode.fromHeaderByte(headerByte);
+      // read size. 
+      int size = 
+          this.compressed[curCompressedIndex++] << 8 &
+          this.compressed[curCompressedIndex++];
+      
+      if (curMode == AccumulatorMode.SEQUENCE_BIG_INT) {
+        int toIndex = curCompressedIndex + size;
+        while (curCompressedIndex < toIndex) {
+          decompressed[curDecompressedIndex++] = 
+              this.compressed[curCompressedIndex++] << 24 & 
+              this.compressed[curCompressedIndex++] << 16 & 
+              this.compressed[curCompressedIndex++] <<  8 & 
+              this.compressed[curCompressedIndex++]; 
+        }
+        
+      } else if (curMode == AccumulatorMode.SEQUENCE) {
+        int toIndex = curCompressedIndex + size;
+        while (curCompressedIndex < toIndex) {
+          decompressed[curDecompressedIndex++] = 
+              this.compressed[curCompressedIndex++] <<  8 & 
+              this.compressed[curCompressedIndex++]; 
+        }
+        
+      } else if (curMode == AccumulatorMode.MULT) {
+        int value = 
+            this.compressed[curCompressedIndex++] <<  8 & 
+            this.compressed[curCompressedIndex++]; 
+        int toIndex = curDecompressedIndex + size/2;
+        while (curDecompressedIndex < toIndex) {
+          decompressed[curDecompressedIndex++] = value;
+        }
+      }
+    }
+    }catch (ArrayIndexOutOfBoundsException e) {
+      e.printStackTrace();
+      throw e;
+    }
+    return decompressed;
   }
   
 //  private void compress(IntStream intStream) {
@@ -70,7 +245,7 @@ public class CompressedUnboundedImage implements Image {
 //          throw new RuntimeException(e);
 //        }
 //      });
-//      this.compressedBytesLength = (int) def.getBytesRead();
+//      this.uncompressedBytesLength = (int) def.getBytesRead();
 //    } catch (IOException e1) {
 //      throw new RuntimeException(e1);
 //    }
@@ -82,7 +257,7 @@ public class CompressedUnboundedImage implements Image {
 //    Inflater decompresser = new Inflater();
 //    decompresser.setInput(this.compressed, 0, this.compressed.length);
 //    
-//    byte[] resultBytes = new byte[this.compressedBytesLength];
+//    byte[] resultBytes = new byte[this.uncompressedBytesLength];
 //    try {
 //      decompresser.inflate(resultBytes);
 //      
@@ -91,7 +266,7 @@ public class CompressedUnboundedImage implements Image {
 //    }
 //    decompresser.end();
 //    
-//    int[] resultInts = new int[this.compressedBytesLength/4];
+//    int[] resultInts = new int[this.uncompressedBytesLength/4];
 //    for (int i=0, j=0; i<resultBytes.length; i+=4, j++) {
 //      resultInts[j] = (resultBytes[i]   << 24)
 //                    | (resultBytes[i+1] << 16)
@@ -101,18 +276,5 @@ public class CompressedUnboundedImage implements Image {
 //    return resultInts;
 //  }
   
-  public UnboundedImage decompress() {
-    return new UnboundedImage(size, decompressData());
-  }
-
-  @Override
-  public ByteImage asByteImage() {
-    return decompress().asByteImage();
-  }
-
-  @Override
-  public ImageSize getSize() {
-    return this.size;
-  }
   
 }

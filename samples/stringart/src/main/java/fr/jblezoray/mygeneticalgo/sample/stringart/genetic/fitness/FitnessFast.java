@@ -1,10 +1,11 @@
 package fr.jblezoray.mygeneticalgo.sample.stringart.genetic.fitness;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
@@ -12,8 +13,8 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedUnboundedImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
-
 
 /**
  * Can compute a fitness score from a StringPathDNA.
@@ -23,194 +24,222 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
  * @author jbl
  */
 public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeListDNA>{
- 
-  private List<GeneratedElement> buffer;
+
+  private final Map<Integer, List<GeneratedElement>> categorizedBuffer;
   
   /** Max number of elements in the buffer. */
   private final int maxBufferSize;
+  
+  /** A classifier that can split a list of edges in distinct categories. */
+  private final Collector<Edge, ?, Map<Integer, List<Edge>>> edgeGroupByClassifier;
+  
+  public Collector<Edge, ?, Map<Integer, List<Edge>>> getEdgeGroupByClassifier() {
+    return edgeGroupByClassifier;
+  }
 
-  private List<String> reusedStats = new ArrayList<>(); 
-  private List<Integer> listSizeStats = new ArrayList<>();
-  private List<Long> timeStats = new ArrayList<>(); 
-  
-  /** size of each element of the buffer. */
-  private final static int GENERATED_ELEMENT_SIZE = 100;
-  
-  private final static int MIN_SCORE = (int)(GENERATED_ELEMENT_SIZE * 0.60f);
 
   public FitnessFast(
-        UnboundedImage refImg,
-        Image importanceMappingImg,
-        int maxBufferSize) {
+      UnboundedImage refImg, 
+      Image importanceMappingImg,
+      int maxBufferSize,
+      int nbOfCategories,
+      int nbNails) {
     super(refImg, importanceMappingImg);
     this.maxBufferSize = maxBufferSize;
-    this.buffer = new LinkedList<>();
+    this.edgeGroupByClassifier = Collectors.groupingBy(edge ->
+        (edge.getNailA() + edge.getNailB()) % nbOfCategories 
+    );
+    this.categorizedBuffer = new HashMap<Integer, List<GeneratedElement>>();
+    for (int i=0; i<nbOfCategories; i++)
+      categorizedBuffer.put(i, new ArrayList<GeneratedElement>());
   }
 
+  private int curmatchcpt = 0;
+  private int curunmatchcpt = 0;
   
-  @Override
-  public void notificationOfGeneration(int _1, EdgeListDNA _2, double[] _3) {
-    int buffSizeBeforePrune = this.buffer.size();
-    
-    // trim buffer list to keep only the best ones. 
-    this.buffer = this.buffer.stream()
-        .sorted()
-        .limit(maxBufferSize)
-        .peek(GeneratedElement::resetReusabilityScore)
-        .collect(Collectors.toList());
-    
-    String reused = reusedStats.stream()
-        .collect(Collectors.groupingBy(String::toString))
-        .values().stream()
-        .sorted((la,lb) -> lb.size() - la.size())
-        .map(list -> list.get(0) + "(x"+list.size()+")")
-        .reduce("", (a,b) -> a + " " + b);
-    reusedStats.clear();
-    
-    int meanDnaSize = listSizeStats.size()==0 ? -1 :  
-        listSizeStats.stream() .reduce(0, (a,b) -> a+b) / listSizeStats.size();
-    
-    long meantime = timeStats.size()==0 ? -1 :  
-      timeStats.stream().reduce(0L, (a,b) -> a+b) / timeStats.size();
-    
-    System.out.println(
-        "buf:"+buffSizeBeforePrune+" (after:"+this.buffer.size()+")"
-        +" meanDnaSize="+meanDnaSize
-        +" meanTime="+meantime+"ms"
-        +" "+reused);
+  class FitnessFastStats {
+    public long nbGeneratedElement;
+    public int scoreSum;
+    public double meanScore;
+    public int matchcpt;
+    public int unmatchcpt;
+    @Override
+    public String toString() {
+      return "elts:"+nbGeneratedElement + ", "
+          + "meanScore:"+meanScore+", "
+          + "matches:"+matchcpt+", "
+          + "unmatches:"+unmatchcpt;
+    } 
   }
   
-   
+  FitnessFastStats buildStats() {
+    FitnessFastStats stats = new FitnessFastStats();
+    stats.nbGeneratedElement = this.categorizedBuffer.values().stream()
+        .flatMap(l -> l.stream())
+        .count();
+    stats.scoreSum = this.categorizedBuffer.values().stream()
+        .flatMap(l -> l.stream())
+        .collect(Collectors.summingInt(ge -> ge.getReusabilityScore()));
+    stats.meanScore = (double)stats.scoreSum / (double)stats.nbGeneratedElement;
+    stats.matchcpt = this.curmatchcpt;
+    stats.unmatchcpt = this.curunmatchcpt;
+    return stats;
+  }
+  
+  
+  @Override
+  public void notificationOfGeneration(int generation, EdgeListDNA dnaBestMatch, double[] allFitnessScores) {
+    FitnessFastStats statsBefore = buildStats();
+    
+    // trim buffer list to keep only the best ones.
+    for (Integer key : categorizedBuffer.keySet()) {
+      List<GeneratedElement> prunedBuffer = this.categorizedBuffer.get(key)
+          .stream()
+          .sorted()
+          .limit(maxBufferSize/categorizedBuffer.size())
+          .collect(Collectors.toList());
+      this.categorizedBuffer.put(key, prunedBuffer);
+    }
+    
+    FitnessFastStats statsAfter = buildStats();
+    System.out.println(
+        "generatedElements : " + statsBefore.nbGeneratedElement 
+        + "/" + statsAfter.nbGeneratedElement
+        + "  meanBefore:"+ statsBefore.meanScore
+        + "  meanAfter:"+ statsAfter.meanScore
+        + "  match/unmatch:"+statsBefore.matchcpt+"/"+statsBefore.unmatchcpt);
+    
+    // reset scores. 
+    resetScores();
+  }
+  
+  void resetScores() {
+    this.categorizedBuffer.values().stream()
+        .flatMap(l -> l.stream())
+        .forEach(GeneratedElement::resetReusabilityScore);
+    this.curmatchcpt = 0;
+    this.curunmatchcpt = 0;
+  }
+
+
   @Override
   public UnboundedImage drawImage(EdgeListDNA imageToDraw) {
-    long start = new Date().getTime();
-    
-    List<Edge> edges = imageToDraw.getAllEdges();
-    this.listSizeStats.add(edges.size());
-    
-    edges = edges.stream().sorted(Edge.COMPARATOR).collect(Collectors.toList());
-    
     UnboundedImage finalImage = new UnboundedImage(this.refImg.getSize());
     
-    int sizeBefore = edges.size();
-    findAndAddGeneratedElements(finalImage, edges);
-//    this.reusedStats.add("" + (sizeBefore - edges.size()) + "/" + sizeBefore);
-    this.reusedStats.add("" + (sizeBefore - edges.size()) );
+    List<Edge> edges = imageToDraw.getAllEdges();
+    Map<Integer, List<Edge>> classifiedEdges = edges.stream()
+        .collect(this.edgeGroupByClassifier);
     
-    addEdges(finalImage, edges);
-    
-    long  timeTook = new Date().getTime() - start;
-    this.timeStats.add(timeTook);
+    for (int categoryId : classifiedEdges.keySet()) {
+      List<Edge> edgesClass = classifiedEdges.get(categoryId);
+      if (edgesClass.size()==0) continue;
+      edgesClass.sort(Edge.COMPARATOR);
+      
+      UnboundedImage edgesImg;
+      Optional<GeneratedElementOperations> bestOpt = buildOperations(categoryId, edgesClass);
+      if (bestOpt.isPresent()) {
+        // create a copy of it 
+        edgesImg = findAndAddGeneratedElements(bestOpt.get(), edgesClass);
+        //save it if it worths it.
+        if (bestOpt.get().contributionScore<0.8) {
+          saveGeneratedElement(categoryId, edgesClass, edgesImg);
+        }
+        this.curmatchcpt++;
+        
+      } else {
+        edgesImg = addAllEdges(edgesClass, finalImage.getSize());
+        // save it.
+        saveGeneratedElement(categoryId, edgesClass, edgesImg);
+        this.curunmatchcpt++;
+      }
+      finalImage.add(edgesImg);
+      
+    }
     
     return finalImage;
   }
 
-
   /**
-   * Find and add GeneratedElements from the cache.
+   * Create an image out of a GeneratedElementOperations.
    * 
-   * At each round, find the GeneratedElement that, if added, results in the
-   * easiest contribution to make (that has the less edges to remove).  Then,
-   * add it to the image, and remove the edges as man edges that are in excess.
+   * It does : 
+   * a) Create a copy if the best generatedElement,
+   * b) Remove all the edges that are not in 'edges'.
+   * c) Add all the edges that are to be added, but that are not in 'best'
    * 
-   * @param finalImage the image to draw onto.
+   * @param best 
+   * @param buffer the list of available GeneratedElements.
    * @param edges the list of edges to draw.  The list will be modified, as some
-   *     of the edges will have been drawn. 
+   *     of the edges will have been drawn.
+   * @return an image of "edges".
    */
-  private void findAndAddGeneratedElements(
-      UnboundedImage finalImage, List<Edge> edges) {
-    Optional<GeneratedElementOperations> bestOpt = Optional.empty();
-    do {
-      bestOpt = buildOperationsFor(edges).parallelStream()
-          .peek(geo -> geo.contributionScore = geo.generatedElement.getEdges().size() - geo.diffToDel.size())
-          .filter(geo -> geo.contributionScore > MIN_SCORE)
-          .max((a, b) -> a.contributionScore - b.contributionScore);
-      
-      if (bestOpt.isPresent()) {
-        GeneratedElementOperations best = bestOpt.get();
-        best.generatedElement.incrementReusabilityScore();
-        
-        UnboundedImage geCopy = best.generatedElement.getGenerated().decompress().deepCopy();
-        // this is not parallelizable: do not use parallelStream() here.
-        best.diffToDel.stream().forEach(edgeToDelete -> 
-          geCopy.remove(edgeToDelete.getDrawnEdgeData())
-        );
-        
-        finalImage.add(geCopy);
-        deleteContributedEdges(edges, best.generatedElement.getEdges());
-
-        saveGeneratedElement(best.diffAdded, geCopy);
-      }
-    } while (edges.size()>GENERATED_ELEMENT_SIZE && bestOpt.isPresent());
-    return;
+  private static UnboundedImage findAndAddGeneratedElements( 
+      GeneratedElementOperations best, List<Edge> edges) {
+    best.generatedElement.incrementReusabilityScore();
+//    UnboundedImage geCopy = best.generatedElement.getGenerated().decompress().deepCopy();
+    UnboundedImage geCopy = best.generatedElement.getGenerated().deepCopy();
+    // this is not parallelizable: do not use parallelStream() here.
+    best.diffToDel.stream().forEach(edgeToDelete -> 
+      geCopy.remove(edgeToDelete.getDrawnEdgeData())
+    );
+    edges.stream().forEach(edgeToAdd -> 
+      geCopy.add(edgeToAdd.getDrawnEdgeData())
+    );
+    return geCopy;
   }
-
-  private static void deleteContributedEdges(List<Edge> edges, List<Edge> toRemove) {
-    toRemove.forEach(edge -> {
-      edges.remove(edge);
-    });
-  }
-
+  
   /**
-   * Draw all the edges one by one. 
-   * 
-   * Will eventually save the result for subsequent calculous.
-   * 
-   * @param finalImage the image to draw onto.
-   * @param edges the list of edges to draw.  Will be emty after the execution.
-   */
-  private void addEdges(UnboundedImage finalImage, List<Edge> edges) {
-    while(edges.size()>0) {
-      int sublistSize = Math.min(edges.size(), GENERATED_ELEMENT_SIZE);
-      List<Edge> sublist = new ArrayList<>(edges.subList(0, sublistSize));
-      UnboundedImage subImage = drawEdges(sublist);
-      deleteContributedEdges(edges, sublist);
-      finalImage.add(subImage);
-      if (sublistSize == GENERATED_ELEMENT_SIZE) {
-        saveGeneratedElement(sublist, subImage);
-      }
-    }
-  }
-
-  private UnboundedImage drawEdges(List<Edge> sublist) {
-    UnboundedImage subImage = new UnboundedImage(this.refImg.getSize());
-    for (Edge edge : sublist) {
-      subImage.add(edge.getDrawnEdgeData());
-    }
-    return subImage;
-  }
-
-  private void saveGeneratedElement(List<Edge> sublist, UnboundedImage subImage) {
-    CompressedUnboundedImage compressed = new CompressedUnboundedImage(subImage);
-    GeneratedElement generatedElement = new GeneratedElement(sublist, compressed);
-    generatedElement.incrementReusabilityScore();
-    synchronized (this.buffer) {
-      this.buffer.add(0, generatedElement);
-    }
-  }
-
-  /**
-   * Init a new list of GeneratedElementOperations, one per instance in the 
-   * buffer.
-   * 
-   * Fill it with the number of edges to delete if this element was to be 
-   * added in the built image.
-   *   
+   * Create an image out of "edges".
    * @param edges
+   * @param size
    * @return
    */
-  private List<GeneratedElementOperations> buildOperationsFor(
-      List<Edge> edges) {
-    
+  private static UnboundedImage addAllEdges(List<Edge> edges, ImageSize size) {
+    UnboundedImage edgesToAddImg = new UnboundedImage(size);
+    edges.stream().forEach(edgeToAdd -> 
+      edgesToAddImg.add(edgeToAdd.getDrawnEdgeData())
+    );
+    return edgesToAddImg;
+  }
+
+  private void saveGeneratedElement(
+      int categoryId, List<Edge> sublist, UnboundedImage subImage) {
+//    CompressedUnboundedImage compressed = new CompressedUnboundedImage(subImage);
+//    GeneratedElement generatedElement = new GeneratedElement(sublist, compressed);
+    GeneratedElement generatedElement = new GeneratedElement(sublist, subImage);
+    generatedElement.incrementReusabilityScore();
+    List<GeneratedElement> buffer = categorizedBuffer.get(categoryId);
+    synchronized (buffer) {
+      buffer.add(generatedElement);
+    }
+  }
+  
+
+  /**
+   * Find the best GeneratedElement in buffer, and create a GeneratedElementOperations.
+   * 
+   * GeneratedElements that produce too much operations are discared. 
+   *   
+   * @param categoryEdges
+   * @return a GeneratedElementOperations that contains information on how to 
+   *        add the best GeneratedElement, or empty if none was found.
+   */
+  private Optional<GeneratedElementOperations> buildOperations(
+      int categoryId, List<Edge> categorizedEdges) {
+    List<GeneratedElement> buffer = categorizedBuffer.get(categoryId);
+
+    // Init a new list of GeneratedElementOperations, one per instance in the 
+    // buffer.
     List<GeneratedElementOperations> elements;
-    synchronized (this.buffer) {
-      elements = this.buffer.stream()
+    synchronized (buffer) {
+      elements = buffer.stream()
           .map(GeneratedElementOperations::new)
           .collect(Collectors.toList());
     }
    
-    for (Edge edge : edges) {
-      List<GeneratedElementOperations> badSmells = new ArrayList<>();
+    // Fill it with the number of edges to delete if this element was to be 
+    // added in the built image.
+    for (Edge edge : categorizedEdges) {
       for (GeneratedElementOperations ge : elements) {
         int comparison = -1;
         while (comparison < 0 && ge.generatedElement.getEdges().size()>ge.curIndex) {
@@ -223,25 +252,23 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
           if (comparison < 0) ge.diffToDel.add(curEdge);
           if (comparison == 0) ge.diffAdded.add(curEdge);
         }
-        // Does this GeneratedElementOperations start to smell bad due to too 
-        // much implied operations ?
-        if (ge.diffToDel.size()>MIN_SCORE) {
-          badSmells.add(ge);
-        }
       }
-      elements.removeAll(badSmells);
     }
     // All subsequent edge are to be deleted.
-    List<GeneratedElementOperations> badSmells = new ArrayList<>();
     for (GeneratedElementOperations ge : elements) {
       while (ge.generatedElement.getEdges().size()>ge.curIndex) {
         ge.diffToDel.add(ge.generatedElement.getEdges().get(ge.curIndex++));
       }
-      if (ge.diffToDel.size()>MIN_SCORE) {
-        badSmells.add(ge);
-      }
     }
-    elements.removeAll(badSmells);
-    return elements;
+    
+    // keep only the one with the best constribution score.
+    return elements.parallelStream()
+        .peek(geo -> geo.contributionScore = geo.diffAdded.size() - geo.diffToDel.size())
+//        .peek(geo -> System.out.println(
+//            "category:"+categoryId+" , "
+//            + "categorizedEdgesSize:"+categorizedEdges.size()+" , "
+//            + "contributionScore:"+geo.contributionScore))
+        .filter(geo -> geo.contributionScore > 0)
+        .max((a, b) -> b.contributionScore - a.contributionScore);
   }
 }
