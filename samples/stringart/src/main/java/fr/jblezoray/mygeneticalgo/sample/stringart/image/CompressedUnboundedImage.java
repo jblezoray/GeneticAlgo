@@ -15,6 +15,19 @@ public class CompressedUnboundedImage implements Image {
     this.size = img.getSize();
     compress(img.intStream());
   }
+  
+  /**
+   * for tests only.
+   * @param size
+   * @param compressed
+   * @param uncompressedBytesLength
+   */
+  CompressedUnboundedImage(
+      ImageSize size, byte[] compressed, int uncompressedBytesLength) {
+    this.size = size;
+    this.compressed = compressed;
+    this.uncompressedBytesLength = uncompressedBytesLength;
+  }
 
   public UnboundedImage decompress() {
     return new UnboundedImage(size, decompressData());
@@ -58,7 +71,7 @@ public class CompressedUnboundedImage implements Image {
     public Accumulator() {
       this.compressedBytes = new ByteArrayOutputStream();
       this.workBuffer = new byte[BUF_SIZE];
-      this.curMode = AccumulatorMode.MULT;
+      this.curMode = AccumulatorMode.NONE;
       this.curWorkBufferIndex = -1;
     }
     
@@ -124,21 +137,21 @@ public class CompressedUnboundedImage implements Image {
     void flush() {
       if (this.curMode == AccumulatorMode.SEQUENCE_BIG_INT) {
         this.compressedBytes.write(AccumulatorMode.SEQUENCE_BIG_INT.getHeaderByte());
-        this.compressedBytes.write((curWorkBufferIndex >> 8) & 0xFF);
-        this.compressedBytes.write((curWorkBufferIndex)      & 0xFF);
-        this.compressedBytes.write(this.workBuffer, 0, curWorkBufferIndex);
+        this.compressedBytes.write(((curWorkBufferIndex+1) >> 8) & 0xFF);
+        this.compressedBytes.write( (curWorkBufferIndex+1)       & 0xFF);
+        this.compressedBytes.write(this.workBuffer, 0, curWorkBufferIndex+1);
         
       } else if (this.curMode == AccumulatorMode.SEQUENCE
               || this.curMode == AccumulatorMode.NONE) {
         this.compressedBytes.write(AccumulatorMode.SEQUENCE.getHeaderByte());
-        this.compressedBytes.write((curWorkBufferIndex >> 8) & 0xFF);
-        this.compressedBytes.write((curWorkBufferIndex)      & 0xFF);
-        this.compressedBytes.write(this.workBuffer, 0, curWorkBufferIndex);
+        this.compressedBytes.write(((curWorkBufferIndex+1) >> 8) & 0xFF);
+        this.compressedBytes.write( (curWorkBufferIndex+1)       & 0xFF);
+        this.compressedBytes.write(this.workBuffer, 0, curWorkBufferIndex+1);
         
       } else if (this.curMode == AccumulatorMode.MULT) {
         this.compressedBytes.write(AccumulatorMode.MULT.getHeaderByte());
-        this.compressedBytes.write((curWorkBufferIndex >> 8) & 0xFF);
-        this.compressedBytes.write((curWorkBufferIndex)      & 0xFF);
+        this.compressedBytes.write(((curWorkBufferIndex+1) >> 8) & 0xFF);
+        this.compressedBytes.write( (curWorkBufferIndex+1)       & 0xFF);
         this.compressedBytes.write(this.workBuffer[0]);
         this.compressedBytes.write(this.workBuffer[1]);
         
@@ -183,23 +196,22 @@ public class CompressedUnboundedImage implements Image {
     int curDecompressedIndex = 0;
     AccumulatorMode curMode;
     byte headerByte;
-    try {
     while (curCompressedIndex<this.compressed.length){
       // read mode. 
       headerByte = this.compressed[curCompressedIndex++];
       curMode = AccumulatorMode.fromHeaderByte(headerByte);
       // read size. 
       int size = 
-          this.compressed[curCompressedIndex++] << 8 &
+          this.compressed[curCompressedIndex++] >> 8 |
           this.compressed[curCompressedIndex++];
-      
+    
       if (curMode == AccumulatorMode.SEQUENCE_BIG_INT) {
-        int toIndex = curCompressedIndex + size;
+        int toIndex = curCompressedIndex + size/4;
         while (curCompressedIndex < toIndex) {
           decompressed[curDecompressedIndex++] = 
-              this.compressed[curCompressedIndex++] << 24 & 
-              this.compressed[curCompressedIndex++] << 16 & 
-              this.compressed[curCompressedIndex++] <<  8 & 
+              this.compressed[curCompressedIndex++] >> 24 | 
+              this.compressed[curCompressedIndex++] >> 16 | 
+              this.compressed[curCompressedIndex++] >>  8 | 
               this.compressed[curCompressedIndex++]; 
         }
         
@@ -207,13 +219,13 @@ public class CompressedUnboundedImage implements Image {
         int toIndex = curCompressedIndex + size;
         while (curCompressedIndex < toIndex) {
           decompressed[curDecompressedIndex++] = 
-              this.compressed[curCompressedIndex++] <<  8 & 
+              this.compressed[curCompressedIndex++] >>  8 | 
               this.compressed[curCompressedIndex++]; 
         }
         
       } else if (curMode == AccumulatorMode.MULT) {
         int value = 
-            this.compressed[curCompressedIndex++] <<  8 & 
+            this.compressed[curCompressedIndex++] >>  8 | 
             this.compressed[curCompressedIndex++]; 
         int toIndex = curDecompressedIndex + size/2;
         while (curDecompressedIndex < toIndex) {
@@ -221,11 +233,18 @@ public class CompressedUnboundedImage implements Image {
         }
       }
     }
-    }catch (ArrayIndexOutOfBoundsException e) {
-      e.printStackTrace();
-      throw e;
-    }
     return decompressed;
+  }
+
+  /**
+   * Getter of the raw compressed bytes array.  
+   * 
+   * Only usefull for tests.
+   *  
+   * @return raw compressed bytes array.
+   */
+  byte[] getCompressedBytes() {
+    return this.compressed;
   }
   
 //  private void compress(IntStream intStream) {

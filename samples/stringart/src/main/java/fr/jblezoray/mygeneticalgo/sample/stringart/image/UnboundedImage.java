@@ -153,4 +153,12 @@ public class UnboundedImage implements Image {
     return IntStream.of(this.unboundedBytes);
   }
 
+  /**
+   * for tests only.
+   * @return
+   */
+  int[] getRawIntegers() {
+    return this.unboundedBytes;
+  }
+
 }
