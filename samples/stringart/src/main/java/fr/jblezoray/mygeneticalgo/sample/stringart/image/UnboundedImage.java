@@ -157,7 +157,7 @@ public class UnboundedImage implements Image {
    * for tests only.
    * @return
    */
-  int[] getRawIntegers() {
+  public int[] getRawIntegers() {
     return this.unboundedBytes;
   }
 

@@ -1,4 +1,4 @@
-package fr.jblezoray.mygeneticalgo.sample.stringart.image;
+package fr.jblezoray.mygeneticalgo.sample.stringart.image.compressed;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +6,10 @@ import java.io.IOException;
 import org.junit.Test;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart.core.EdgeImageIO;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.ByteImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.compressed.CompressedUnboundedImage;
 
 public class CompressedUnboundedImageTest {
   

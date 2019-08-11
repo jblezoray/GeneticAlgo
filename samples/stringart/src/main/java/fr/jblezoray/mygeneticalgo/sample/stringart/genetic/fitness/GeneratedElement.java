@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
-import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedUnboundedImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.compressed.CompressedUnboundedImage;
 
 class GeneratedElement implements Comparable<GeneratedElement> {
   private final List<Edge> edges;

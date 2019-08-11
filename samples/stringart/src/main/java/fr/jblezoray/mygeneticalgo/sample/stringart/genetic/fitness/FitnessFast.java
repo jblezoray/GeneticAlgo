@@ -11,10 +11,10 @@ import java.util.stream.Collectors;
 import fr.jblezoray.mygeneticalgo.IGeneticAlgoListener;
 import fr.jblezoray.mygeneticalgo.sample.stringart.edge.Edge;
 import fr.jblezoray.mygeneticalgo.sample.stringart.genetic.EdgeListDNA;
-import fr.jblezoray.mygeneticalgo.sample.stringart.image.CompressedUnboundedImage;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.Image;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.ImageSize;
 import fr.jblezoray.mygeneticalgo.sample.stringart.image.UnboundedImage;
+import fr.jblezoray.mygeneticalgo.sample.stringart.image.compressed.CompressedUnboundedImage;
 
 /**
  * Can compute a fitness score from a StringPathDNA.
