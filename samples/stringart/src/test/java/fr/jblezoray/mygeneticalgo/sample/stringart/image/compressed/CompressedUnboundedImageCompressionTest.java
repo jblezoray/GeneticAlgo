@@ -109,6 +109,27 @@ public class CompressedUnboundedImageCompressionTest {
   };
 
 
+  private final static int[] TEST_6_UNCOMPRESSED = {
+      1, 
+      2, 2, 2, 
+      2, 2, 2, 2,  
+  };
+  private final static byte[] TEST_6_COMPRESSED = {
+      new MultAccumulator(AccumulatorType.BYTE_1).getHeaderByte(),
+      0x01, // type
+      1, // size 
+      0x01, // value
+      new SequenceAccumulator(AccumulatorType.BYTE_1).getHeaderByte(),
+      0x01, // type
+      3, // size 
+      0x02, 0x02, 0x02, // value
+      new MultAccumulator(AccumulatorType.BYTE_1).getHeaderByte(),
+      0x01, // type
+      4, // size 
+      0x02, // value
+  };
+
+
   @Parameters
   public static Collection<Object[]> data() {
     ArrayList<Object[]> data = new ArrayList<>();
@@ -118,6 +139,7 @@ public class CompressedUnboundedImageCompressionTest {
     data.add(new Object[] {TEST_3_UNCOMPRESSED, TEST_3_COMPRESSED});
     data.add(new Object[] {TEST_4_UNCOMPRESSED, TEST_4_COMPRESSED});
     data.add(new Object[] {TEST_5_UNCOMPRESSED, TEST_5_COMPRESSED});
+    data.add(new Object[] {TEST_6_UNCOMPRESSED, TEST_6_COMPRESSED});
     return data;
   }
 

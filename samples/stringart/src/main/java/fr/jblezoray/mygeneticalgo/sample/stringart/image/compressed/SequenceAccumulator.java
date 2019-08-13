@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 
 public class SequenceAccumulator implements IAccumulator {
 
-  private static final int SIMILAR_VALUES_THRESHOLD = 5;
+  private static final int SIMILAR_VALUES_THRESHOLD = 3;
   private final AccumulatorType type;
   private final int byteShift;
   private final ByteArrayOutputStream sequenceOfBytes;

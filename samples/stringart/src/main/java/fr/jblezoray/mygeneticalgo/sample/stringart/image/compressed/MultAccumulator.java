@@ -59,7 +59,7 @@ public class MultAccumulator implements IAccumulator {
       
     } else if (value != i) {
       return (this.counter==1) ? WriteResult.SEQUENCE_DETECTED 
-          : WriteResult.NOT_ACCEPTABLE;
+          : WriteResult.MULT_DETECTED;
       
     } else if (this.counter==0xFF){
       return WriteResult.FULL_CAPACITY;
