@@ -9,10 +9,10 @@ import fr.jblezoray.mygeneticalgo.sample.stringart.image.compressed.CompressedUn
 
 class GeneratedElement implements Comparable<GeneratedElement> {
   private final List<Edge> edges;
-  private final UnboundedImage generated;
+  private final CompressedUnboundedImage generated;
   private int reusabilityScore;
   
-  public GeneratedElement(List<Edge> edges, UnboundedImage generated) {
+  public GeneratedElement(List<Edge> edges, CompressedUnboundedImage generated) {
     this.edges = Collections.unmodifiableList(edges);
     this.generated = generated;
     this.reusabilityScore = 0;
@@ -27,7 +27,7 @@ class GeneratedElement implements Comparable<GeneratedElement> {
     return edges;
   }
 
-  public UnboundedImage getGenerated() {
+  public CompressedUnboundedImage getGenerated() {
     return generated;
   }
 

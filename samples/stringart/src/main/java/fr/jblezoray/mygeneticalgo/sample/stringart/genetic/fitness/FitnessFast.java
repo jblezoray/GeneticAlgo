@@ -89,7 +89,7 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
   
   @Override
   public void notificationOfGeneration(int generation, EdgeListDNA dnaBestMatch, double[] allFitnessScores) {
-    FitnessFastStats statsBefore = buildStats();
+//    FitnessFastStats statsBefore = buildStats();
     
     // trim buffer list to keep only the best ones.
     for (Integer key : categorizedBuffer.keySet()) {
@@ -101,13 +101,13 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
       this.categorizedBuffer.put(key, prunedBuffer);
     }
     
-    FitnessFastStats statsAfter = buildStats();
-    System.out.println(
-        "generatedElements : " + statsBefore.nbGeneratedElement 
-        + "/" + statsAfter.nbGeneratedElement
-        + "  meanBefore:"+ statsBefore.meanScore
-        + "  meanAfter:"+ statsAfter.meanScore
-        + "  match/unmatch:"+statsBefore.matchcpt+"/"+statsBefore.unmatchcpt);
+//    FitnessFastStats statsAfter = buildStats();
+//    System.out.println(
+//        "generatedElements : " + statsBefore.nbGeneratedElement 
+//        + "/" + statsAfter.nbGeneratedElement
+//        + "  meanBefore:"+ statsBefore.meanScore
+//        + "  meanAfter:"+ statsAfter.meanScore
+//        + "  match/unmatch:"+statsBefore.matchcpt+"/"+statsBefore.unmatchcpt);
     
     // reset scores. 
     resetScores();
@@ -141,7 +141,7 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
         // create a copy of it 
         edgesImg = findAndAddGeneratedElements(bestOpt.get(), edgesClass);
         //save it if it worths it.
-        if (bestOpt.get().contributionScore<0.8) {
+        if (bestOpt.get().contributionScore<0.9) {
           saveGeneratedElement(categoryId, edgesClass, edgesImg);
         }
         this.curmatchcpt++;
@@ -176,8 +176,7 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
   private static UnboundedImage findAndAddGeneratedElements( 
       GeneratedElementOperations best, List<Edge> edges) {
     best.generatedElement.incrementReusabilityScore();
-//    UnboundedImage geCopy = best.generatedElement.getGenerated().decompress().deepCopy();
-    UnboundedImage geCopy = best.generatedElement.getGenerated().deepCopy();
+    UnboundedImage geCopy = best.generatedElement.getGenerated().decompress();
     // this is not parallelizable: do not use parallelStream() here.
     best.diffToDel.stream().forEach(edgeToDelete -> 
       geCopy.remove(edgeToDelete.getDrawnEdgeData())
@@ -204,9 +203,9 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
 
   private void saveGeneratedElement(
       int categoryId, List<Edge> sublist, UnboundedImage subImage) {
-//    CompressedUnboundedImage compressed = new CompressedUnboundedImage(subImage);
-//    GeneratedElement generatedElement = new GeneratedElement(sublist, compressed);
-    GeneratedElement generatedElement = new GeneratedElement(sublist, subImage);
+    
+    CompressedUnboundedImage compressed = new CompressedUnboundedImage(subImage);
+    GeneratedElement generatedElement = new GeneratedElement(sublist, compressed);
     generatedElement.incrementReusabilityScore();
     List<GeneratedElement> buffer = categorizedBuffer.get(categoryId);
     synchronized (buffer) {
@@ -264,10 +263,6 @@ public class FitnessFast extends Fitness implements IGeneticAlgoListener<EdgeLis
     // keep only the one with the best constribution score.
     return elements.parallelStream()
         .peek(geo -> geo.contributionScore = geo.diffAdded.size() - geo.diffToDel.size())
-//        .peek(geo -> System.out.println(
-//            "category:"+categoryId+" , "
-//            + "categorizedEdgesSize:"+categorizedEdges.size()+" , "
-//            + "contributionScore:"+geo.contributionScore))
         .filter(geo -> geo.contributionScore > 0)
         .max((a, b) -> b.contributionScore - a.contributionScore);
   }
