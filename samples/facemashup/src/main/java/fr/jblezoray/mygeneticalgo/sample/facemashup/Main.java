@@ -41,12 +41,13 @@ public class Main {
     AbstractImageDNA faceMaskImage = new UnmodifiableImageDNA(fileMask, true);
     IDNAFactory<FaceImageDNA> factory = new FaceImageDNAFactory(faceMaskImage, NB_FACES_PER_IMAGE);
     
-    GeneticAlgo<FaceImageDNA> ga = new GeneticAlgo<>(fitness, factory, sel, POP_SIZE);
+    GeneticAlgo<FaceImageDNA> ga = new GeneticAlgo<>(fitness, factory, sel);
     ga.addListener(new ImageSaverListener<>(dirStatus, LOG_INTERVAL));
     ga.addListener(new StatsListener<>(System.out, LOG_INTERVAL));
     ga.addListener(new FitnessRepartitionTextPloterListener<>(System.out, 30, 80, LOG_INTERVAL));
 //    ga.addListener(new FitnessHistoryGraphicalPloter<>());
     ga.addListener(new ImageGraphicalPresentationListener<>(referenceImage));
+    ga.setPopulationSize(POP_SIZE);
     ga.evolve(2_000);
   }
 

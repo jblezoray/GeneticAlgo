@@ -22,7 +22,7 @@ public class HelloWorldMain implements
     HelloWorldMain hwg = new HelloWorldMain();
     ISelection<DNAInteger> sel = new BinaryTournamentSelection<>();
     
-    GeneticAlgo<DNAInteger> ga = new GeneticAlgo<>(hwg, hwg, sel, 100);
+    GeneticAlgo<DNAInteger> ga = new GeneticAlgo<>(hwg, hwg, sel);
     ga.setCrossoversRange(1, 5);
     ga.setMutationRate(0.005f);
     ga.addListener(hwg);

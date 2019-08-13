@@ -21,7 +21,6 @@ import fr.jblezoray.mygeneticalgo.utils.StatsListener;
  */
 public class Main {
   
-  private static final int POPULATION_SIZE = 100;
   private final static int LOG_INTERVAL = 10;
   
   public static void main(String[] args) throws IOException {
@@ -40,7 +39,7 @@ public class Main {
     
     ISelection<DiskImageDNA> sel = new BinaryTournamentSelection<>();
     
-    GeneticAlgo<DiskImageDNA> ga = new GeneticAlgo<>(fit, fac, sel, POPULATION_SIZE);
+    GeneticAlgo<DiskImageDNA> ga = new GeneticAlgo<>(fit, fac, sel);
     ga.addListener(new ImageSaverListener<>(dirStatus, LOG_INTERVAL));
     ga.addListener(new StatsListener<>(System.out, LOG_INTERVAL));
     ga.evolve(2_000);

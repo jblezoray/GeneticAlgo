@@ -33,14 +33,13 @@ public class GeneticMain {
   
   public static void main(String[] args) throws IOException {
     
-    int nbIndividuals = 100;
-    int initialNumberOfEdgesPerIndividual = 1;
+    int initialNumberOfEdgesPerIndividual = 10;
     
     System.out.println("loading files ...");
     ByteImage refImg = EdgeImageIO.readFile(GOAL_IMAGE_PATH);
     ByteImage impImg = EdgeImageIO.readFile(FEATURES_IMAGE_PATH);
-    refImg = refImg.downsample(0.25);
-    impImg = impImg.downsample(0.25);
+    refImg = refImg.downsample(0.5);
+    impImg = impImg.downsample(0.5);
     ImageSize refImgSize = refImg.getSize();
     UnboundedImage refImgUnbounded = new UnboundedImage(refImgSize).add(refImg);
 
@@ -54,7 +53,7 @@ public class GeneticMain {
     System.out.println("initalizing edge factory ...");
     EdgeFactory edgeFactory = new EdgeFactory(MIN_NAILS_DIFF, NB_NAILS, 
         EDGE_WAY_ENABLED, DEFAULT_EDGE_WAY, edgeDrawer);
-    FitnessFast fitness = new FitnessFast(refImgUnbounded, impImg, 1_000, 50, NB_NAILS);
+    FitnessFast fitness = new FitnessFast(refImgUnbounded, impImg, 500, 50, NB_NAILS);
 
     System.out.println("initalizing dna factory ...");
     EdgeListDNAFactory dnaFactory = new EdgeListDNAFactory(
@@ -65,8 +64,7 @@ public class GeneticMain {
     ISelection<EdgeListDNA> selection = new BinaryTournamentSelection<>();
 
     System.out.println("initalizing genetic algo (may take a few seconds) ...");
-    GeneticAlgo<EdgeListDNA> ga = new GeneticAlgo<>(
-        fitness, dnaFactory, selection, nbIndividuals);
+    GeneticAlgo<EdgeListDNA> ga = new GeneticAlgo<>(fitness, dnaFactory, selection);
     
     System.out.println("initalizing listeners ...");
     ga.addListener(new StatsListener<EdgeListDNA>(System.out, 1));
@@ -74,10 +72,21 @@ public class GeneticMain {
     ga.addListener(new ImagePrintListener(fitness, edgeDrawer, 10));
     ga.addListener(new FitnessHistoryGraphicalPloter<>());
     ga.addListener(fitness);
-    ga.setCrossoversRange(1, 2);
-    ga.setMutationRate(0.05f);
     
     System.out.println("starting to evolve.");
+    ga.setCrossoversRange(3, 5);
+    ga.setMutationRate(0.05f);
+    ga.setPopulationSize(20);
+    ga.evolve(200);
+    
+    ga.setCrossoversRange(1, 3);
+    ga.setPopulationSize(40);
+    ga.setMutationRate(0.03f);
+    ga.evolve(200);
+    
+    ga.setPopulationSize(60);
+    ga.setMutationRate(0.01f);
+    ga.setCrossoversRange(1, 1);
     while (true)
       ga.evolve();
     

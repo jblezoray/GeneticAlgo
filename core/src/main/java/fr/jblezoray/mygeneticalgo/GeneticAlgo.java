@@ -9,16 +9,17 @@ import fr.jblezoray.mygeneticalgo.dna.IDNA;
 
 public class GeneticAlgo<X extends IDNA> {
 
-
   private static final float DEFAULT_MUTATION_RATE = 0.005f;
   private static final int DEFAULT_MIN_CROSSOVER = 1;
   private static final int DEFAULT_MAX_CROSSOVER = 3;
+  private static final int DEFAULT_POPULATION_SIZE = 100;
   
   private final IFitness<X> fitness;
   private final ISelection<X> selection;
+  private final IDNAFactory<X> dnaFactory;
   
   private int generationCounter = 0;
-  private List<X> population;
+  private List<X> population = null;
   
   private int minCrossovers;
   private int maxCrossovers;
@@ -35,18 +36,33 @@ public class GeneticAlgo<X extends IDNA> {
    * @param populationSize
    */
   public GeneticAlgo(IFitness<X> fitness, IDNAFactory<X> dnaFactory, 
-      ISelection<X> selection, int populationSize) {
-    if (populationSize < 2)
-      throw new RuntimeException("population size must be >= 2");
+      ISelection<X> selection) {
     this.population = new ArrayList<>();
-    for (int i=0; i<populationSize; i++)
-      this.population.add(dnaFactory.createRandomIndividual());
     this.fitness = fitness;
     this.selection = selection;
+    this.dnaFactory = dnaFactory;
     this.setCrossoversRange(DEFAULT_MIN_CROSSOVER, DEFAULT_MAX_CROSSOVER);
     this.setMutationRate(DEFAULT_MUTATION_RATE);
+    this.setPopulationSize(DEFAULT_POPULATION_SIZE);
   }
   
+  public void setPopulationSize(int populationSize) {
+    if (populationSize < 2)
+      throw new RuntimeException("population size must be >= 2");
+    
+    if (this.population.size() > populationSize) {
+      this.population.sort((a,b) -> Double.compare(a.getFitness(), b.getFitness()));
+      while (this.population.size() > populationSize) {
+        this.population.remove(0);
+      }
+      
+    } else if (this.population.size() < populationSize) {
+      while (this.population.size() < populationSize) {
+        this.population.add(dnaFactory.createRandomIndividual());
+      }
+    }
+  }
+
   public void addListener(IGeneticAlgoListener<X> listener) {
     this.listeners.add(listener);
   }
