@@ -49,29 +49,25 @@ public class MultAccumulator implements IAccumulator {
   
   @Override
   public WriteResult write(int i) {
-    WriteResult result; 
     if (counter == 0) {
-      result = (i>>byteShift!=0) ? WriteResult.TYPE_TOO_SMALL : WriteResult.OK;
-      if (result == WriteResult.OK) {
-        this.value = i;
-        this.counter = 1;
-      }
+      if (i>>byteShift!=0) 
+        return WriteResult.TYPE_TOO_SMALL;
+      if (type != AccumulatorType.BYTE_1 && i>>(byteShift-8)==0) 
+        return WriteResult.TYPE_TOO_BIG;
+      this.value = i;
+      this.counter = 1;
       
     } else if (value != i) {
-      if (this.counter==1) {
-        result = WriteResult.SEQUENCE_DETECTED;
-      } else {
-        result = WriteResult.NOT_ACCEPTABLE;
-      }
+      return (this.counter==1) ? WriteResult.SEQUENCE_DETECTED 
+          : WriteResult.NOT_ACCEPTABLE;
       
     } else if (this.counter==0xFF){
-      result = WriteResult.FULL_CAPACITY;
+      return WriteResult.FULL_CAPACITY;
       
     } else {
       this.counter++;
-      result = WriteResult.OK;
     }
-    return result;
+    return WriteResult.OK;
   }
 
   @Override

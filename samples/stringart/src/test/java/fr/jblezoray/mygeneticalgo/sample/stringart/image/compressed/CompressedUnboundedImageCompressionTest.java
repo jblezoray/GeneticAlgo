@@ -72,37 +72,42 @@ public class CompressedUnboundedImageCompressionTest {
   };
 
   private final static int[] TEST_4_UNCOMPRESSED = {
-      0x01, 0x01, 
-      1_000, 1_000, 1_000, 
-      1_000_000, 1_000_000, 1_000_000,
-      1, 2, 3
+      1_000, 1_000,
+      1, 
   };
   private final static byte[] TEST_4_COMPRESSED = {
-      new MultAccumulator(AccumulatorType.BYTE_1).getHeaderByte(), 
-      0x01, // type BYTE_1
-      2, // size 
-      0x01, // value
-      
       new MultAccumulator(AccumulatorType.BYTE_2).getHeaderByte(),
       0x02, // type BYTE_2
-      3, // size
+      2, // size
       (byte)0xE8, 0x03, // value 1000
       
+      new MultAccumulator(AccumulatorType.BYTE_1).getHeaderByte(), 
+      0x01, // type BYTE_1
+      1, // size 
+      0x01, // value
+  };
+
+  private final static int[] TEST_5_UNCOMPRESSED = {
+      1_000_000, 1_000_000, 1_000_000,
+      1, 2, 3 
+  };
+  private final static byte[] TEST_5_COMPRESSED = {
       new MultAccumulator(AccumulatorType.BYTE_4).getHeaderByte(),
       0x04, // type BYTE_4
       3, // size 
       0x40, 0x42, 0x0F, 0x00, // value 1_000_000
       
-      new MultAccumulator(AccumulatorType.BYTE_4).getHeaderByte(),
-      0x04, // type BYTE_4
+      new MultAccumulator(AccumulatorType.BYTE_1).getHeaderByte(), 
+      0x01, // type BYTE_1
       1, // size 
-      0x01, 0x00, 0x00, 0x00, // value
+      0x01, // value
       
-      new SequenceAccumulator(AccumulatorType.BYTE_1).getHeaderByte(),
+      new SequenceAccumulator(AccumulatorType.BYTE_1).getHeaderByte(), 
       0x01, // type BYTE_1
       2, // size 
       0x02, 0x03, // value
   };
+
 
   @Parameters
   public static Collection<Object[]> data() {
@@ -112,6 +117,7 @@ public class CompressedUnboundedImageCompressionTest {
     data.add(new Object[] {TEST_2_UNCOMPRESSED, TEST_2_COMPRESSED});
     data.add(new Object[] {TEST_3_UNCOMPRESSED, TEST_3_COMPRESSED});
     data.add(new Object[] {TEST_4_UNCOMPRESSED, TEST_4_COMPRESSED});
+    data.add(new Object[] {TEST_5_UNCOMPRESSED, TEST_5_COMPRESSED});
     return data;
   }
 
